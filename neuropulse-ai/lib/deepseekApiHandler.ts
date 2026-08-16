@@ -97,9 +97,10 @@ export async function sendToDeepSeekAIStream(
     throw new Error("Not authenticated. Please log in.");
   }
 
-  const apiUrl = typeof window !== "undefined"
-    ? (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765")
-    : "http://127.0.0.1:8765";
+  // Resolve backend base from the build-time env var; fall back to local dev.
+  // NEXT_PUBLIC_API_URL must be set at build time for deployed environments.
+  const apiUrl =
+    (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765").replace(/\/+$/, "");
 
   const res = await fetch(`${apiUrl}/api/deepseek-chat`, {
     method: "POST",

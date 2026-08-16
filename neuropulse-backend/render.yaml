@@ -1,0 +1,35 @@
+# Render.com blueprint for the NeuroPulse backend.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: neuropulse-backend
+    runtime: python
+    rootDir: neuropulse-backend
+    plan: free
+    # Match the Python version tested locally (venv_new => 3.13.0).
+    pythonVersion: 3.13.0
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    # Env vars mirroring .env.example. Real values (SECRET_KEY, CORS_ORIGINS,
+    # DEEPSEEK_API_KEY) are set in the Render dashboard, NOT committed here.
+    envVars:
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: DEEPSEEK_API_ENDPOINT
+        sync: false
+      - key: DEEPSEEK_MODEL
+        value: deepseek-v4-flash-0731
+      - key: DATABASE_PATH
+        value: ./data/brainprint.db
+      - key: CORS_ORIGINS
+        sync: false
+      - key: BRAINPRINT_SIMILARITY_THRESHOLD
+        value: "0.82"
+      - key: BRAINPRINT_MAHALANOBIS_THRESHOLD
+        value: "3.0"
+      - key: SECRET_KEY
+        sync: false
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: DISABLE_DEMO_STREAM
+        value: "false"
