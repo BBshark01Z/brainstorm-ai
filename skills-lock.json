@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "skills": {
+    "babysit": {
+      "source": "thedotmack/claude-mem",
+      "sourceType": "github",
+      "skillPath": "plugin/skills/babysit/SKILL.md",
+      "computedHash": "1e0610afc6110fad8c012f44dd5aa09cdd25530198f515f49e5d94eda08a4465"
+    },
+    "banner-design": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/banner-design/SKILL.md",
+      "computedHash": "f859a951ded1109a38bcc7f18faf4581f9adbf0550df7a11c013e77a5b229541"
+    },
+    "brand": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/brand/SKILL.md",
+      "computedHash": "bd65dbd8de679805d1ad740c74a41b4f831d08ff0240390a7ed2947c62a896b9"
+    },
+    "design": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/design/SKILL.md",
+      "computedHash": "0eb28c6a2b9b3ce52f294ce630fd1f13aeb39178d91a4a503bf233c0391ba7ab"
+    },
+    "design-system": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/design-system/SKILL.md",
+      "computedHash": "5a3dbae4a3c2ad9f96323d9bfae926b3c21bb1e3b066aa067906f577a2ff2545"
+    },
+    "learn-codebase": {
+      "source": "thedotmack/claude-mem",
+      "sourceType": "github",
+      "skillPath": "plugin/skills/learn-codebase/SKILL.md",
+      "computedHash": "9142aab8302123f63d8db49430d1f59e2ff2bdcb885d6b3f054f22f7d92f5791"
+    },
+    "mem-search": {
+      "source": "thedotmack/claude-mem",
+      "sourceType": "github",
+      "skillPath": "plugin/skills/mem-search/SKILL.md",
+      "computedHash": "6058bee763732e6c85f77523e97ad27f476e73ee44fbfdcf105a218ef1dd52e0"
+    },
+    "oh-my-issues": {
+      "source": "thedotmack/claude-mem",
+      "sourceType": "github",
+      "skillPath": "plugin/skills/oh-my-issues/SKILL.md",
+      "computedHash": "cee3669201ddc7eb488e3c20699ad46428ded9ff29e98c7c1fbfc696e1d29cfd"
+    },
+    "pathfinder": {
+      "source": "thedotmack/claude-mem",
+      "sourceType": "github",
+      "skillPath": "plugin/skills/pathfinder/SKILL.md",
+      "computedHash": "96bf2edcbffd36a3119d4dea942561b02ecf355cc872d73cf21cc346092e3db2"
+    },
+    "planning-with-files": {
+      "source": "OthmanAdi/planning-with-files",
+      "sourceType": "github",
+      "skillPath": "skills/planning-with-files/SKILL.md",
+      "computedHash": "c3481705d3d7a693ec1dfdf6c4403a4797342eca7b3989fc0269d84e5eaea65b"
+    },
+    "slides": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/slides/SKILL.md",
+      "computedHash": "a2b3559b58afc484548e1eb359e20495d11cf12b90da7c1fbba50efed9a70340"
+    },
+    "smart-explore": {
+      "source": "thedotmack/claude-mem",
+      "sourceType": "github",
+      "skillPath": "plugin/skills/smart-explore/SKILL.md",
+      "computedHash": "9a1725dd93477d0b1c698f3b47734dc10491c6edeb89cb728d2f33ab4ac35fce"
+    },
+    "stop-slop": {
+      "source": "hardikpandya/stop-slop",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "09acd38f01d6c643bce871a739141c01a06a04f43d8b55959ef73550476e771c"
+    },
+    "strategic-compact": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "skillPath": "skills/strategic-compact/SKILL.md",
+      "computedHash": "e316e154cf19b177f935b65cd3307ba13d743c94f3402b7dd7ecc16083b73ed8"
+    },
+    "ui-styling": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-styling/SKILL.md",
+      "computedHash": "fdb733278fc29ece0f1a8a97b46d6b404b03e24a140a3518ab52f24e4347dbda"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "e71368ecbf6badeeba615370af70065f3514902e8cb1384ca81b6f1cbea53760"
+    },
+    "version-bump": {
+      "source": "thedotmack/claude-mem",
+      "sourceType": "github",
+      "skillPath": "plugin/skills/version-bump/SKILL.md",
+      "computedHash": "ff2b16d823f09e2252753a4103385870c0e7f9fbfd744d6f6004a9ff0904c4ae"
+    }
+  }
+}

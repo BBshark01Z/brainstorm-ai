@@ -1,0 +1,67 @@
+# ---------------------------------------------------------------------------
+# NeuroPulse — root .gitignore
+# ---------------------------------------------------------------------------
+# Anything here must NOT be committed to the coursework repository.
+
+# ---------- Secrets & environment ----------
+# Real env files with secret values: NEVER commit. Keep .env.example.
+.env
+.env.*
+!.env.example
+*.local
+
+# Claude personal gateway config — CONTAINS A LIVE API TOKEN
+claude-9arm-*.json
+claude-9arm-setup.ps1
+fornewdevice.txt
+
+# ---------- Python / backend ----------
+venv/
+venv_new/
+venv*/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# SQLite databases (include the large data/brainprint.db)
+*.db
+*.sqlite
+*.sqlite3
+
+# Reference EEG download / caching dirs
+neuropulse-backend/data/reference-eeg/
+mne_data/
+MNE-*/
+
+# ---------- Node / frontend ----------
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# ---------- Logs / temp / OS ----------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.session-temp/
+.DS_Store
+Thumbs.db
+.npm
+
+# ---------- Claude Code tooling (not coursework) ----------
+.claude/
+memory/
+.test-harness/
+
+# ---------- Local dev scratch ----------
+neuropulse-ai/q5_*.mjs
+neuropulse-ai/q5shots/
+neuropulse-ai/.q3-test/

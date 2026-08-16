@@ -1,0 +1,71 @@
+{
+  "n_samples": 4998,
+  "n_features": 8,
+  "feature_columns": [
+    "delta",
+    "theta",
+    "alpha",
+    "beta",
+    "gamma",
+    "focus_index",
+    "stress_index",
+    "relaxation_index"
+  ],
+  "train_size": 3998,
+  "test_size": 1000,
+  "test_accuracy": 0.996,
+  "test_f1_macro": 0.9959,
+  "cv_f1_mean": 0.9925,
+  "cv_f1_std": 0.0016,
+  "cv_folds": 5,
+  "classification_report": {
+    "focus": {
+      "precision": 0.9967637540453075,
+      "recall": 0.9903536977491961,
+      "f1-score": 0.9935483870967742,
+      "support": 311.0
+    },
+    "relax": {
+      "precision": 0.9970238095238095,
+      "recall": 1.0,
+      "f1-score": 0.9985096870342772,
+      "support": 335.0
+    },
+    "stress": {
+      "precision": 0.9943661971830986,
+      "recall": 0.9971751412429378,
+      "f1-score": 0.995768688293371,
+      "support": 354.0
+    },
+    "accuracy": 0.996,
+    "macro avg": {
+      "precision": 0.9960512535840719,
+      "recall": 0.9958429463307112,
+      "f1-score": 0.9959422541414741,
+      "support": 1000.0
+    },
+    "weighted avg": {
+      "precision": 0.9960021375013837,
+      "recall": 0.996,
+      "f1-score": 0.9959964091994331,
+      "support": 1000.0
+    }
+  },
+  "feature_importances": {
+    "delta": 0.004611,
+    "theta": 0.059035,
+    "alpha": 0.240884,
+    "beta": 0.080203,
+    "gamma": 0.038146,
+    "focus_index": 0.150411,
+    "stress_index": 0.210852,
+    "relaxation_index": 0.215857
+  },
+  "model_params": {
+    "n_estimators": 200,
+    "max_depth": 20,
+    "min_samples_split": 5,
+    "min_samples_leaf": 2,
+    "class_weight": "balanced"
+  }
+}
