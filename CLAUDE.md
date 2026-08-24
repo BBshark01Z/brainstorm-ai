@@ -128,7 +128,7 @@ The embedding vector shape from `AnalyzeResponse.embedding` is the same shape fe
 |----------|---------|-------------|
 | `DEEPSEEK_API_KEY` | (unset) | API key for real DeepSeek calls; unset = 500 from the service |
 | `DEEPSEEK_API_ENDPOINT` | DashScope compatible-mode | DeepSeek API endpoint URL |
-| `DEEPSEEK_MODEL` | `deepseek-v4-flash-0731` | DeepSeek model ID |
+| `DEEPSEEK_MODEL` | `qwen3.8-27b-fp8` | AI model ID (gateway model; var name kept from the DeepSeek rename) |
 | `DATABASE_PATH` | `./data/brainprint.db` | SQLite database location |
 | `CORS_ORIGINS` | `http://localhost:3000,http://127.0.0.1:3000` | Comma-separated CORS origins |
 | `BRAINPRINT_SIMILARITY_THRESHOLD` | `0.82` | Min cosine similarity for VERIFIED |

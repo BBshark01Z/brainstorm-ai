@@ -143,7 +143,7 @@ def main():
     env = dict(os.environ)
     env["DEEPSEEK_API_ENDPOINT"] = f"http://127.0.0.1:{MOCK_PORT}/v1/chat/completions"
     env["DEEPSEEK_API_KEY"] = "test-placeholder-key"
-    env["DEEPSEEK_MODEL"] = "deepseek-v4-flash-0731"
+    env["DEEPSEEK_MODEL"] = "qwen3.8-27b-fp8"
 
     backend = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "main:app", "--port", str(BACKEND_PORT)],

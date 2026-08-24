@@ -96,7 +96,7 @@ list — it contains placeholders only, never real values):
 | `SECRET_KEY` | *(must be set)* | Signing key for JWT auth. Required. |
 | `DEEPSEEK_API_KEY` | *(unset)* | API key for real AI-consultant calls; unset = consultant returns 500. |
 | `DEEPSEEK_API_ENDPOINT` | DashScope compatible-mode | AI endpoint URL. |
-| `DEEPSEEK_MODEL` | `deepseek-v4-flash-0731` | AI model ID. |
+| `DEEPSEEK_MODEL` | `qwen3.8-27b-fp8` | AI model ID. |
 | `DATABASE_PATH` | `./data/brainprint.db` | SQLite database location. |
 | `CORS_ORIGINS` | `http://localhost:3000,http://127.0.0.1:3000` | Comma-separated allowed origins. |
 | `BRAINPRINT_SIMILARITY_THRESHOLD` | `0.82` | Min cosine similarity for a VERIFIED match. |
