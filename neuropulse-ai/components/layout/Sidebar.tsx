@@ -4,16 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { Activity, Fingerprint, LineChart, Bot, Brain } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Home", icon: Activity },
-  { href: "/brainprint", label: "Brainprint", icon: Fingerprint },
-  { href: "/analytics", label: "Analytics", icon: LineChart },
-  { href: "/ai-consultant", label: "AI Consultant", icon: Bot },
+  { href: "/dashboard", label: "nav.home", icon: Activity },
+  { href: "/brainprint", label: "nav.brainprint", icon: Fingerprint },
+  { href: "/analytics", label: "nav.analytics", icon: LineChart },
+  { href: "/ai-consultant", label: "nav.aiConsultant", icon: Bot },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return (
     <aside
@@ -93,7 +95,7 @@ export function Sidebar() {
                   active ? "text-cyan-400" : "text-slate-500 group-hover:text-slate-300"
                 )}
               />
-              {label}
+              {t(label)}
             </Link>
           );
         })}
@@ -103,7 +105,7 @@ export function Sidebar() {
       <div className="mt-auto border-t px-4 py-4" style={{ borderColor: "rgba(30, 42, 61, 0.4)" }}>
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-emerald-400" style={{ boxShadow: "0 0 6px #10B981" }} />
-          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500">System Online</span>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500">{t("nav.systemOnline")}</span>
         </div>
       </div>
     </aside>

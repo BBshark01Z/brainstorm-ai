@@ -13,10 +13,12 @@ import { apiFetch, FetchErrorType } from "./fetchWithHealth";
 /**
  * Send a prompt to the backend AI consultant.
  * Requires JWT authentication via localStorage("auth_token").
+ * `language` ("th" | "en") tells the backend to reply in the active UI language.
  */
 export async function sendToDeepSeekAI(
   userPrompt: string,
-  eegContext: Record<string, unknown> = {}
+  eegContext: Record<string, unknown> = {},
+  language: "th" | "en" = "en"
 ): Promise<DeepSeekAIResponse> {
   const rawToken = localStorage.getItem("auth_token");
   if (!rawToken) {
@@ -37,6 +39,7 @@ export async function sendToDeepSeekAI(
   const payload = {
     user_prompt: userPrompt,
     eeg_context: eegContext,
+    language,
   };
   const result = await apiFetch<{ reply: string; flagged_markers?: string[]; latency_ms?: number }>("/api/deepseek-chat", {
     method: "POST",
@@ -81,6 +84,7 @@ export async function sendToDeepSeekAIStream(
   userPrompt: string,
   eegContext: Record<string, unknown> = {},
   onToken: (token: string) => void,
+  language: "th" | "en" = "en",
 ): Promise<string> {
   const rawToken = localStorage.getItem("auth_token");
   if (!rawToken) {
@@ -111,6 +115,7 @@ export async function sendToDeepSeekAIStream(
     body: JSON.stringify({
       user_prompt: userPrompt,
       eeg_context: eegContext,
+      language,
     }),
   });
 

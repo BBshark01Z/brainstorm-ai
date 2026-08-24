@@ -98,7 +98,7 @@ from schemas import (
 )
 from services import feature_extractor
 from services.analytics_tip import build_analytics_tip_fallback
-from services.deepseek_service import SYSTEM_PROMPT, _build_system_context, DeepSeekBrainConsultant
+from services.deepseek_service import build_system_prompt, _build_system_context, DeepSeekBrainConsultant
 
 # ---------------------------------------------------------------------------
 # Load trained brain-state model at startup
@@ -135,7 +135,15 @@ logger = logging.getLogger("neuropulse.main")
 # Configuration
 # ---------------------------------------------------------------------------
 
-SECRET_KEY = os.getenv("SECRET_KEY", "neurop-production-static-key")
+# JWT signing key. Must be provided via the environment (.env) — there is no
+# safe hardcoded default. Fail fast at startup rather than signing tokens with
+# a known/static value.
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY is not set. Copy neuropulse-backend/.env.example to "
+        "neuropulse-backend/.env and set SECRET_KEY to a strong random value."
+    )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
@@ -597,10 +605,11 @@ async def deepseek_chat(
 
     # 2. Build full conversation for DeepSeek.
     #
-    #    a) Fixes mojibake: the system prompt is reused from the service module
-    #       (deepseek_service.SYSTEM_PROMPT) instead of being duplicated inline
-    #       here — the inline copy had corrupted Thai characters. One source of
-    #       truth, always correctly-encoded UTF-8.
+    #    a) The system prompt comes from the service module (build_system_prompt)
+    #       — one source of truth, always correctly-encoded UTF-8. It also
+    #       appends a reply-language directive matching the user's active UI
+    #       language (payload.language: "th" | "en"), so the AI answers in the
+    #       same language the user is reading the UI in.
     #
     #    b) Wires eeg_context into the model request the same way that
     #       DeepSeekBrainConsultant.consult() does — via _build_system_context.
@@ -608,7 +617,7 @@ async def deepseek_chat(
     #       the messages sent to the gateway, so the model had no idea what EEG
     #       data it was discussing.
     all_messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": build_system_prompt(payload.language)},
     ]
     if payload.eeg_context:
         all_messages.append({"role": "user", "content": _build_system_context(payload.eeg_context)})
@@ -770,18 +779,28 @@ async def analytics_tip(
       (no key, timeout, HTTP error) so the feature always returns something.
     """
     metrics = payload.metrics or {}
-    logger.info("analytics-tip handler: user_id=%s metrics_keys=%s", current_user["id"], list(metrics.keys()))
+    language = (payload.language or "en").lower()
+    logger.info("analytics-tip handler: user_id=%s metrics_keys=%s language=%s", current_user["id"], list(metrics.keys()), language)
 
-    prompt = (
-        "จากข้อมูลการวิเคราะห์เชิงยาว (longitudinal) ที่ให้มา "
-        "จงเขียนสรุปสั้นๆ 2-4 ประโยคให้ผู้ใช้ทราบว่าข้อมูลนี้กำลังบอกอะไร "
-        "เน้นแนวโน้มสำคัญของตัวชี้วัด (เช่น ค่าความเสี่ยง burnout, FAA, sleep spindle density, "
-        "slow-wave sleep) เมื่อเทียบกับค่าเฉลี่ย 30 วันที่ผ่านมา "
-        "และให้คำแนะนำเชิงปฏิบัติ 1 ข้อ พร้อมเตือนว่าข้อมูลนี้เป็นการคัดกรองเบื้องต้นไม่ใช่การวินิจฉัย"
-    )
+    if language == "th":
+        prompt = (
+            "จากข้อมูลการวิเคราะห์เชิงยาว (longitudinal) ที่ให้มา "
+            "จงเขียนสรุปสั้นๆ 2-4 ประโยคให้ผู้ใช้ทราบว่าข้อมูลนี้กำลังบอกอะไร "
+            "เน้นแนวโน้มสำคัญของตัวชี้วัด (เช่น ค่าความเสี่ยง burnout, FAA, sleep spindle density, "
+            "slow-wave sleep) เมื่อเทียบกับค่าเฉลี่ย 30 วันที่ผ่านมา "
+            "และให้คำแนะนำเชิงปฏิบัติ 1 ข้อ พร้อมเตือนว่าข้อมูลนี้เป็นการคัดกรองเบื้องต้นไม่ใช่การวินิจฉัย"
+        )
+    else:
+        prompt = (
+            "From the longitudinal analytics data provided, write a short 2-4 sentence summary "
+            "telling the user what the data is indicating. Focus on the key trends of the metrics "
+            "(e.g. burnout risk, FAA, sleep spindle density, slow-wave sleep) compared against the "
+            "30-day average, and give one practical recommendation. Remind the user that this is "
+            "preliminary screening, not a medical diagnosis."
+        )
 
     try:
-        result = await deepseek_consultant.consult(prompt, eeg_context=metrics)
+        result = await deepseek_consultant.consult(prompt, eeg_context=metrics, language=language)
         tip = (result.get("reply") or "").strip()
         if not tip:
             raise ValueError("empty DeepSeek reply")
@@ -792,7 +811,7 @@ async def analytics_tip(
             current_user["id"], exc,
         )
         return AnalyticsTipResponse(
-            tip=build_analytics_tip_fallback(metrics),
+            tip=build_analytics_tip_fallback(metrics, language=language),
             used_fallback=True,
             latency_ms=0.0,
         )

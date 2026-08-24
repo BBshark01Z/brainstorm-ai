@@ -1,6 +1,7 @@
 {
   "name": "neuropulse-ai",
   "version": "0.1.0",
+  "description": "NeuroPulse EEG monitoring frontend — real-time monitor, Brainprint, analytics, AI neuro-consultant.",
   "private": true,
   "scripts": {
     "dev": "next dev",

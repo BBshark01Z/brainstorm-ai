@@ -3,16 +3,18 @@
 import clsx from "clsx";
 import { Upload, Wifi } from "lucide-react";
 import { InputMode } from "@/lib/types";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
-const MODES: { value: InputMode; label: string; icon: typeof Upload | typeof Wifi }[] = [
-  { value: "file", label: "File Upload", icon: Upload },
-  { value: "websocket", label: "WebSocket", icon: Wifi },
+const MODES: { value: InputMode; labelKey: string; icon: typeof Upload | typeof Wifi }[] = [
+  { value: "file", labelKey: "dash.modeFile", icon: Upload },
+  { value: "websocket", labelKey: "dash.modeWebSocket", icon: Wifi },
 ];
 
 export function InputModeToggle({ value, onChange }: { value: InputMode; onChange: (mode: InputMode) => void }) {
+  const { t } = useLanguage();
   return (
     <div className="inline-flex rounded-lg border border-slate-700/50 bg-slate-900/50 p-1">
-      {MODES.map(({ value: mode, label, icon: Icon }) => (
+      {MODES.map(({ value: mode, labelKey, icon: Icon }) => (
         <button
           key={mode}
           onClick={() => onChange(mode)}
@@ -24,7 +26,7 @@ export function InputModeToggle({ value, onChange }: { value: InputMode; onChang
           )}
         >
           <Icon size={13} />
-          {label}
+          {t(labelKey)}
         </button>
       ))}
     </div>

@@ -1,6 +1,7 @@
 import { Battery, Signal, Radio, Activity, WifiOff } from "lucide-react";
 import clsx from "clsx";
 import { ConnectionStatus } from "@/lib/types";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 const IMPEDANCE_COLOR: Record<ConnectionStatus["impedanceQuality"], string> = {
   good: "#10B981",
@@ -61,6 +62,7 @@ function ElectrodeDot({ channel, kOhm, quality }: { channel: string; kOhm: numbe
 }
 
 export function ConnectionStatusWidget({ connection }: { connection: ConnectionStatus }) {
+  const { t } = useLanguage();
   const { connected, signalStrength, batteryPercent, impedanceQuality, channelImpedances, deviceName } = connection;
   const qualityColor = IMPEDANCE_COLOR[impedanceQuality];
   const qualityGlow = IMPEDANCE_GLOW[impedanceQuality];
@@ -76,13 +78,13 @@ export function ConnectionStatusWidget({ connection }: { connection: ConnectionS
         }}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Headset Link</h2>
+          <h2 className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{t("dash.headsetLink")}</h2>
           <WifiOff size={14} className="text-slate-600" />
         </div>
         <div className="flex flex-col items-center gap-3 py-4">
           <WifiOff size={28} className="text-slate-700" />
-          <p className="text-xs font-medium text-slate-500">No Connection</p>
-          <p className="text-[10px] text-slate-600">Connect to a backend to start monitoring</p>
+          <p className="text-xs font-medium text-slate-500">{t("dash.noConnection")}</p>
+          <p className="text-[10px] text-slate-600">{t("dash.noConnectionHint")}</p>
         </div>
       </div>
     );
@@ -109,14 +111,14 @@ export function ConnectionStatusWidget({ connection }: { connection: ConnectionS
           <Signal size={16} className="text-cyan-400" />
           <div>
             <p className="text-sm font-bold text-white">{signalStrength}%</p>
-            <p className="text-[10px] text-slate-500">Signal</p>
+            <p className="text-[10px] text-slate-500">{t("dash.signal")}</p>
           </div>
         </div>
         <div className="flex items-center gap-2.5">
           <Battery size={16} className="text-cyan-400" />
           <div>
             <p className="text-sm font-bold text-white">{batteryPercent}%</p>
-            <p className="text-[10px] text-slate-500">Battery</p>
+            <p className="text-[10px] text-slate-500">{t("dash.battery")}</p>
           </div>
         </div>
       </div>
@@ -124,7 +126,7 @@ export function ConnectionStatusWidget({ connection }: { connection: ConnectionS
       {/* Impedance header */}
       <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
         <Radio size={12} />
-        Electrode Impedance
+        {t("dash.impedance")}
       </div>
 
       {/* Per-channel impedance dots */}
@@ -157,7 +159,7 @@ export function ConnectionStatusWidget({ connection }: { connection: ConnectionS
           }}
         />
         <span className="text-[10px] font-semibold text-emerald-400/80">
-          All channels nominal · {channelImpedances.length} electrodes
+          {t("dash.channelsNominal", { count: channelImpedances.length })}
         </span>
       </div>
     </div>

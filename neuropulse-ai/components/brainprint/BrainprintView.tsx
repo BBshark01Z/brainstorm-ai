@@ -11,6 +11,7 @@ import { ProfileVerifiedPanel } from "./ProfileVerifiedPanel";
 import { UnknownWaveModal } from "./UnknownWaveModal";
 import { BandPowerComparison, ReferenceSelector } from "./BandPowerComparison";
 import { ShareReportButton } from "@/components/share/ShareReportButton";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 interface ProfileSummary {
   profile_id: number;
@@ -114,6 +115,7 @@ export function BrainprintView() {
   const { setBrainprintStatus } = useAppStatus();
   const { verifiedProfile, setVerifiedProfile, clearVerifiedProfile, refSelector } =
     useBrainprintContext();
+  const { t } = useLanguage();
 
   const [knownProfiles, setKnownProfiles] = useState<KnownBrainprintProfile[]>([]);
   const [token, setToken] = useState<string | null>(null);
@@ -255,7 +257,7 @@ export function BrainprintView() {
   if (loading) {
     return (
       <div className="panel flex flex-col items-center justify-center gap-2 p-10 text-center text-ink-faint">
-        <p className="text-sm">Loading Brainprint profiles...</p>
+        <p className="text-sm">{t("bp.loadingProfiles")}</p>
       </div>
     );
   }
@@ -264,10 +266,10 @@ export function BrainprintView() {
     <div className="flex flex-col gap-4">
       {/* Header with share button */}
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-display font-semibold text-ink">Brainprint Biometric Authentication</h1>
+        <h1 className="text-lg font-display font-semibold text-ink">{t("bp.title")}</h1>
         <ShareReportButton
           reportType="brainprint"
-          title={`Brainprint Report — ${new Date().toLocaleDateString()}`}
+          title={t("bp.shareTitle", { date: new Date().toLocaleDateString() })}
           metrics={shareMetrics}
           className="!m-0"
         />
@@ -294,8 +296,8 @@ export function BrainprintView() {
         ) : (
           <div className="panel flex flex-col gap-4">
             <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-ink-faint">
-              <p className="text-sm">No verified profile yet</p>
-              <p className="text-xs">Run a scan to check it against the Brainprint database.</p>
+              <p className="text-sm">{t("bp.noVerified")}</p>
+              <p className="text-xs">{t("bp.noVerifiedHint")}</p>
             </div>
             <ReferenceSelector
               sleepStage={refSelector.sleepStage}
@@ -310,7 +312,7 @@ export function BrainprintView() {
         )}
 
         <div className="lg:col-span-2">
-          <p className="mb-2 text-xs text-ink-faint">Enrolled profiles ({knownProfiles.length})</p>
+          <p className="mb-2 text-xs text-ink-faint">{t("bp.enrolledProfiles", { count: knownProfiles.length })}</p>
           <div className="flex flex-wrap gap-2">
             {knownProfiles.map((p) => (
               <span key={p.id} className="glass-pill rounded-full px-3 py-1 text-xs text-ink-muted">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 // ---------------------------------------------------------------------------
 // StatsFooter — count-up stats pulled from REAL, verified app/DB figures.
@@ -12,10 +13,10 @@ import { useEffect, useRef, useState } from "react";
 // ---------------------------------------------------------------------------
 
 const STATS = [
-  { value: 5, format: (v: number) => String(v), label: "Frequency bands analyzed", source: "δ θ α β γ" },
-  { value: 20, format: (v: number) => String(v), label: "Reference subjects", source: "eeg_reference_data" },
-  { value: 54587, format: (v: number) => v.toLocaleString("en-US"), label: "Reference samples", source: "healthy + patient" },
-  { value: 300, format: (v: number) => `${v}ms`, label: "Stream refresh rate", source: "WebSocket tick" },
+  { value: 5, format: (v: number) => String(v), labelKey: "stat.bands", source: "δ θ α β γ" },
+  { value: 20, format: (v: number) => String(v), labelKey: "stat.subjects", source: "eeg_reference_data" },
+  { value: 54587, format: (v: number) => v.toLocaleString("en-US"), labelKey: "stat.samples", source: "healthy + patient" },
+  { value: 300, format: (v: number) => `${v}ms`, labelKey: "stat.refresh", source: "WebSocket tick" },
 ];
 
 function prefersReducedMotion(): boolean {
@@ -50,6 +51,7 @@ function useCountUp(target: number, active: boolean) {
 }
 
 function Stat({ stat }: { stat: (typeof STATS)[number] }) {
+  const { t } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
   const val = useCountUp(stat.value, inView);
@@ -75,7 +77,7 @@ function Stat({ stat }: { stat: (typeof STATS)[number] }) {
       <div className="font-display text-2xl font-semibold text-slate-100 sm:text-3xl">
         {stat.format(val)}
       </div>
-      <div className="text-xs uppercase tracking-wider text-slate-500">{stat.label}</div>
+      <div className="text-xs uppercase tracking-wider text-slate-500">{t(stat.labelKey)}</div>
       <div className="font-mono text-[10px] leading-snug text-slate-600">{stat.source}</div>
     </div>
   );
@@ -89,7 +91,7 @@ export function StatsFooter() {
     // stat and its sub-label cleanly separated at any viewport.
     <div className="grid grid-cols-2 gap-x-6 gap-y-7 border-t border-slate-700/20 pt-6">
       {STATS.map((s) => (
-        <Stat key={s.label} stat={s} />
+        <Stat key={s.labelKey} stat={s} />
       ))}
     </div>
   );

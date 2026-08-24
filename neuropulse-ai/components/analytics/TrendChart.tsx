@@ -3,6 +3,7 @@
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { LongitudinalDataPoint } from "@/lib/types";
 import { GlowPanel } from "@/components/ui/primitives";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 export function TrendChart({
   title,
@@ -21,6 +22,7 @@ export function TrendChart({
   unit?: string;
   index?: number;
 }) {
+  const { t } = useLanguage();
   const gradientId = `gradient-${dataKey}`;
   const latest = data[data.length - 1];
   const latestValue = latest ? (latest[dataKey] as number) : undefined;
@@ -42,7 +44,7 @@ export function TrendChart({
           </div>
           {latestValue !== undefined && (
             <div className="shrink-0 rounded-lg border border-base-border bg-base-overlay/40 px-2 py-1 text-right">
-              <span className="block text-[10px] uppercase tracking-wider text-ink-faint">Latest</span>
+              <span className="block text-[10px] uppercase tracking-wider text-ink-faint">{t("an.latest")}</span>
               <span className="font-mono text-sm font-semibold" style={{ color }}>
                 {latestValue.toLocaleString()}
                 {unit ?? ""}

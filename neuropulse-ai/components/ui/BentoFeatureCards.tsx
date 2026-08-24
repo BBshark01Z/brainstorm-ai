@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Activity, Fingerprint, Bot, LineChart } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 // ---------------------------------------------------------------------------
 // BentoFeatureCards — 3D tilt + conic glow border on hover
@@ -96,16 +97,17 @@ function MiniScanRing() {
 }
 
 function MiniChatPreview() {
+  const { t } = useLanguage();
   return (
     <div className="space-y-2">
       <div className="rounded-lg bg-slate-700/40 px-3 py-1.5 text-[10px] text-slate-300 max-w-[80%]">
-        Based on your alpha asymmetry...
+        {t("splash.chat.ai1")}
       </div>
       <div className="rounded-lg bg-cyan-900/30 px-3 py-1.5 text-[10px] text-cyan-300 ml-auto max-w-[85%]">
-        Show me the trend for last month
+        {t("splash.chat.user")}
       </div>
       <div className="rounded-lg bg-slate-700/40 px-3 py-1.5 text-[10px] text-slate-300 max-w-[80%]">
-        Here is your burnout recovery index...
+        {t("splash.chat.ai2")}
       </div>
     </div>
   );
@@ -137,14 +139,15 @@ function MiniTrendChart() {
 }
 
 export function BentoFeatureCards() {
+  const { t } = useLanguage();
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
       <div className="mb-10 text-center">
         <h2 className="font-display text-2xl font-semibold text-slate-100 sm:text-3xl">
-          Platform Capabilities
+          {t("splash.features.title")}
         </h2>
         <p className="mt-2 text-sm text-slate-400 sm:text-base">
-          Real-time neural monitoring, biometric security, and AI insights
+          {t("splash.features.sub")}
         </p>
       </div>
 
@@ -156,12 +159,12 @@ export function BentoFeatureCards() {
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <Activity size={16} className="text-cyan-400" />
-                  <span className="text-xs font-mono uppercase tracking-wider text-slate-400">Live Monitor</span>
+                  <span className="text-xs font-mono uppercase tracking-wider text-slate-400">{t("splash.card.liveMonitor")}</span>
                 </div>
-                <h3 className="text-base font-semibold text-slate-100 sm:text-lg">5-Band EEG Waveform</h3>
+                <h3 className="text-base font-semibold text-slate-100 sm:text-lg">{t("splash.card.waveform")}</h3>
               </div>
               <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
-                LIVE
+                {t("splash.badge.live")}
               </span>
             </div>
             <MiniWaveform />
@@ -185,14 +188,14 @@ export function BentoFeatureCards() {
             <div>
               <div className="mb-2 flex items-center gap-2">
                 <Fingerprint size={16} className="text-emerald-400" />
-                <span className="text-xs font-mono uppercase tracking-wider text-slate-400">Security</span>
+                <span className="text-xs font-mono uppercase tracking-wider text-slate-400">{t("splash.card.security")}</span>
               </div>
-              <h3 className="text-base font-semibold text-slate-100 sm:text-lg">Brainprint</h3>
+              <h3 className="text-base font-semibold text-slate-100 sm:text-lg">{t("nav.brainprint")}</h3>
             </div>
             <div className="flex items-center justify-between">
               <MiniScanRing />
               <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
-                VERIFIED
+                {t("splash.badge.verified")}
               </span>
             </div>
           </div>
@@ -206,7 +209,7 @@ export function BentoFeatureCards() {
                 <Bot size={16} className="text-violet-400" />
                 <span className="text-xs font-mono uppercase tracking-wider text-slate-400">AI</span>
               </div>
-              <h3 className="text-base font-semibold text-slate-100 sm:text-lg">DeepSeek Consultant</h3>
+              <h3 className="text-base font-semibold text-slate-100 sm:text-lg">{t("splash.card.consultant")}</h3>
             </div>
             <MiniChatPreview />
           </div>
@@ -219,27 +222,27 @@ export function BentoFeatureCards() {
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <LineChart size={16} className="text-violet-400" />
-                  <span className="text-xs font-mono uppercase tracking-wider text-slate-400">Analytics</span>
+                  <span className="text-xs font-mono uppercase tracking-wider text-slate-400">{t("nav.analytics")}</span>
                 </div>
-                <h3 className="text-base font-semibold text-slate-100 sm:text-lg">Burnout & Recovery Index</h3>
+                <h3 className="text-base font-semibold text-slate-100 sm:text-lg">{t("splash.card.burnout")}</h3>
               </div>
               <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
-                IMPROVING
+                {t("splash.badge.improving")}
               </span>
             </div>
             <MiniTrendChart />
             <div className="mt-3 grid grid-cols-3 gap-3 text-center">
               <div>
                 <div className="text-lg font-semibold text-violet-400">72</div>
-                <div className="text-[10px] text-slate-500">Recovery</div>
+                <div className="text-[10px] text-slate-500">{t("splash.card.recovery")}</div>
               </div>
               <div>
                 <div className="text-lg font-semibold text-amber-400">23</div>
-                <div className="text-[10px] text-slate-500">Burnout Risk</div>
+                <div className="text-[10px] text-slate-500">{t("splash.card.burnoutRisk")}</div>
               </div>
               <div>
                 <div className="text-lg font-semibold text-cyan-400">+18%</div>
-                <div className="text-[10px] text-slate-500">Trend</div>
+                <div className="text-[10px] text-slate-500">{t("splash.card.trend")}</div>
               </div>
             </div>
           </div>

@@ -18,7 +18,7 @@ export const DEEPSEEK_API_ENDPOINT =
   process.env.DEEPSEEK_API_ENDPOINT ||
   "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
 
-export const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-v4-flash-0731";
+export const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "qwen3.8-27b-fp8";
 
 /** True once a real key has been configured. */
 export function isDeepSeekConfigured(): boolean {

@@ -56,12 +56,27 @@ yarn-error.log*
 Thumbs.db
 .npm
 
+# ---------- IDE / editor ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+
 # ---------- Claude Code tooling (not coursework) ----------
 .claude/
 memory/
 .test-harness/
 
-# ---------- Local dev scratch ----------
+# ---------- Local dev scratch / one-off test + debug artifacts ----------
 neuropulse-ai/q5_*.mjs
 neuropulse-ai/q5shots/
 neuropulse-ai/.q3-test/
+
+# One-off Thai-translation tooling scratch OUTPUTS (keep the .mjs scripts,
+# ignore the generated dumps / temp files they produce).
+neuropulse-ai/scripts/*.txt
+neuropulse-ai/scripts/tmp-*.json
+neuropulse-ai/scripts/thai-flat.json
+neuropulse-ai/scripts/thai-readable.txt
+neuropulse-ai/scripts/flagged-dump.txt
+neuropulse-ai/scripts/*-dump.txt

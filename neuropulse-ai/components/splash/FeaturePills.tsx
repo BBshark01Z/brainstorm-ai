@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Activity, Fingerprint, LineChart, Bot } from "lucide-react";
 import clsx from "clsx";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 // ---------------------------------------------------------------------------
 // FeaturePills — interactive feature-preview pills for the splash page.
@@ -13,38 +14,39 @@ import clsx from "clsx";
 const FEATURES = [
   {
     key: "monitor",
-    label: "Live Monitor",
+    labelKey: "pill.monitor.label",
     icon: Activity,
-    tagline: "Real-time EEG waveforms across five frequency bands on a live stream.",
+    taglineKey: "pill.monitor.tag",
   },
   {
     key: "brainprint",
-    label: "Brainprint",
+    labelKey: "pill.brainprint.label",
     icon: Fingerprint,
-    tagline: "Biometric identity matching from neural features against enrolled profiles.",
+    taglineKey: "pill.brainprint.tag",
   },
   {
     key: "analytics",
-    label: "Analytics",
+    labelKey: "pill.analytics.label",
     icon: LineChart,
-    tagline: "Longitudinal trends and baseline comparison against a 20-subject reference set.",
+    taglineKey: "pill.analytics.tag",
   },
   {
     key: "consultant",
-    label: "AI Consultant",
+    labelKey: "pill.consultant.label",
     icon: Bot,
-    tagline: "An AI neuro-consultant that interprets your signals and answers questions.",
+    taglineKey: "pill.consultant.tag",
   },
 ];
 
 export function FeaturePills() {
   const [active, setActive] = useState<string>("monitor");
+  const { t } = useLanguage();
   const selected = FEATURES.find((f) => f.key === active)!;
 
   return (
     <div className="mt-8 w-full max-w-2xl">
       <div className="flex flex-wrap justify-center gap-2 sm:gap-3 lg:justify-start">
-        {FEATURES.map(({ key, label, icon: Icon }) => {
+        {FEATURES.map(({ key, labelKey, icon: Icon }) => {
           const isActive = active === key;
           return (
             <button
@@ -62,7 +64,7 @@ export function FeaturePills() {
               aria-pressed={isActive}
             >
               <Icon size={15} />
-              {label}
+              {t(labelKey)}
             </button>
           );
         })}
@@ -75,7 +77,7 @@ export function FeaturePills() {
         role="status"
       >
         <selected.icon size={16} className="shrink-0 text-neural" />
-        <p className="text-sm text-slate-300">{selected.tagline}</p>
+        <p className="text-sm text-slate-300">{t(selected.taglineKey)}</p>
       </div>
     </div>
   );

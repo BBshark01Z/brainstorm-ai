@@ -8,6 +8,7 @@ import { sendToDeepSeekAIStream } from "@/lib/deepseekApiHandler";
 import { PromptChips } from "./PromptChips";
 import { apiFetch, FetchErrorType } from "@/lib/fetchWithHealth";
 import { useEEGContext } from "@/hooks/useEEGContext";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 // Use relative path — Next.js rewrites /api/* to the backend.
 // Works locally and behind Cloudflare/ngrok tunnel.
@@ -61,6 +62,7 @@ async function loadChatHistory(rawToken: string): Promise<ChatMessage[]> {
 
 export function AIChatInterface() {
   const eeg = useEEGContext();
+  const { lang, t } = useLanguage();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
@@ -76,8 +78,7 @@ export function AIChatInterface() {
         {
           id: "welcome",
           role: "assistant",
-          content:
-            "สวัสดีครับ กรุณาเข้าสู่ระบบเพื่อเริ่มสนทนากับ AI Neuro-Consultant",
+          content: t("ai.welcomeNoAuth"),
           timestamp: Date.now(),
         },
       ]);
@@ -91,8 +92,7 @@ export function AIChatInterface() {
             {
               id: "welcome",
               role: "assistant",
-              content:
-                "I'm your Neuro-Consultant. Ask me about your brain health, recovery protocols, or EEG analysis.",
+              content: t("ai.welcome"),
               timestamp: Date.now(),
             },
           ]);
@@ -102,7 +102,7 @@ export function AIChatInterface() {
       })
       .catch(() => {
         setDeepSeekStatus("error");
-        setDeepSeekReason("Failed to load chat history");
+        setDeepSeekReason(t("ai.histError"));
       });
   }, []);
 
@@ -151,7 +151,7 @@ export function AIChatInterface() {
     const token = localStorage.getItem("auth_token");
     if (!token) {
       setDeepSeekStatus("error");
-      setDeepSeekReason("Not authenticated. Please log in.");
+      setDeepSeekReason(t("ai.notAuth"));
       return;
     }
 
@@ -186,11 +186,12 @@ export function AIChatInterface() {
             top: scrollRef.current.scrollHeight,
             behavior: "smooth",
           });
-        }
+        },
+        lang
       );
       setIsThinking(false);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
+      const message = err instanceof Error ? err.message : t("ai.unknownError");
       setDeepSeekStatus("error");
       setDeepSeekReason(message);
       setIsThinking(false);
@@ -199,7 +200,7 @@ export function AIChatInterface() {
         {
           id: `err-${Date.now()}`,
           role: "assistant",
-          content: `Error: ${message}`,
+          content: t("ai.errorPrefix", { message }),
           timestamp: Date.now(),
         },
       ]);
@@ -233,8 +234,8 @@ export function AIChatInterface() {
             <Bot size={16} className="text-cyan-400" />
           </div>
           <div>
-            <h2 className="font-display text-sm font-semibold text-white">AI Neuro-Consultant</h2>
-            <p className="text-[10px] text-slate-500">Powered by DeepSeek AI</p>
+            <h2 className="font-display text-sm font-semibold text-white">{t("ai.title")}</h2>
+            <p className="text-[10px] text-slate-500">{t("ai.poweredBy")}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -248,15 +249,15 @@ export function AIChatInterface() {
               )}
               title={
                 deepseekStatus === "live"
-                  ? "Connected to DeepSeek AI — real analysis"
-                  : deepseekReason || "Error"
+                  ? t("ai.statusLiveTitle")
+                  : deepseekReason || t("ai.error")
               }
             >
               <span className="h-1.5 w-1.5 rounded-full" style={{
                 backgroundColor: deepseekStatus === "live" ? "#10B981" : "#EF4444",
                 boxShadow: deepseekStatus === "live" ? "0 0 6px #10B981" : "0 0 6px #EF4444",
               }} />
-              {deepseekStatus === "live" ? "Live" : "Error"}
+              {deepseekStatus === "live" ? t("ai.live") : t("ai.error")}
             </span>
           )}
         </div>
@@ -321,7 +322,7 @@ export function AIChatInterface() {
                 style={{ background: "var(--surface-glass)", border: "1px solid var(--hairline-default)" }}
               >
                 <Loader2 size={14} className="animate-spin text-cyan-400" />
-                <span className="text-xs font-medium text-slate-400">Analyzing neural patterns…</span>
+                <span className="text-xs font-medium text-slate-400">{t("ai.analyzing")}</span>
               </div>
             </div>
           )}
@@ -332,10 +333,10 @@ export function AIChatInterface() {
       <div className="border-t border-slate-700/30 px-5 py-2.5">
         <PromptChips
           suggestions={[
-            "Analyze my current brain state",
-            "Why is my stress high?",
-            "Generate a recovery protocol",
-            "Explain my EEG bands",
+            t("ai.chip.analyze"),
+            t("ai.chip.stress"),
+            t("ai.chip.recovery"),
+            t("ai.chip.bands"),
           ]}
           onSelect={submitPrompt}
           disabled={isThinking}
@@ -353,7 +354,7 @@ export function AIChatInterface() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about your brain health…"
+          placeholder={t("ai.inputPlaceholder")}
           disabled={isThinking}
           className="flex-1 rounded-xl border border-base-border bg-base-overlay/40 px-4 py-2.5 text-sm text-white placeholder-slate-500 transition-all duration-300 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20"
           style={{ transitionTimingFunction: "var(--ease-out-expo)" }}

@@ -20,33 +20,47 @@ DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 DEEPSEEK_API_ENDPOINT = os.getenv(
     "DEEPSEEK_API_ENDPOINT", "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
 )
-DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash-0731")
+DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "qwen3.8-27b-fp8")
 
-SYSTEM_PROMPT = """คุณคือ AI Neuro-Consultant สำหรับแพลตฟอร์ม NeuroPulse AI — ระบบตรวจสอบคลื่นสมอง (EEG) และการวิเคราะห์สุขภาพสมอง
+# Language-neutral system prompt. The reply language is NOT baked in here —
+# it is appended per-request via build_system_prompt(language) so the model
+# always answers in the language the user selected in the UI (th / en).
+SYSTEM_PROMPT = """You are the AI Neuro-Consultant for the NeuroPulse AI platform — an EEG monitoring and brain-health analysis system.
 
-คุณทำงานในบริบทการแพทย์และประสาทวิทยา คุณมีหน้าที่:
-1. วิเคราะห์ข้อมูล EEG (delta, theta, alpha, beta, gamma band power)
-2. อธิบายดัชนีสุขภาพสมอง: Focus Score, Stress Level, Mental Fatigue, FAA (Frontal Alpha Asymmetry)
-3. ให้คำแนะนำด้านสุขภาพสมองและประสาทวิทยาศาสตร์
-4. ชี้บ่งสัญญาณที่ควรปรึกษาแพทย์ (แต่อย่าวินิจฉัย — แจ้งว่าเป็นการคัดกรองเบื้องต้น)
+You work in a medical/neuroscience context. Your duties:
+1. Analyze EEG data (delta, theta, alpha, beta, gamma band power)
+2. Explain brain-health indices: Focus Score, Stress Level, Mental Fatigue, FAA (Frontal Alpha Asymmetry)
+3. Give advice on brain health and neuroscience
+4. Flag signals that warrant a doctor's visit (but do NOT diagnose — state that this is preliminary screening)
 
-กฎสำคัญ:
-- ตอบเป็นภาษาไทยเสมอ เว้นแต่ผู้ใช้ขอเป็นภาษาอังกฤษ
-- อธิบายศัพท์เทคนิคให้อ่านเข้าใจง่าย
-- เน้นประสาทวิทยาศาสตร์และ EEG interpretation
-- เตือนเสมอว่าการวิเคราะห์นี้เป็นเพียงการคัดกรองเบื้องต้น ไม่ใช่การวินิจฉัยทางการแพทย์
-- หากพบค่าผิดปกติรุนแรง ให้แนะนำพบแพทย์โดยเร็ว
-- ใช้ข้อมูล EEG ที่ผู้ใช้ส่งมาประกอบการวิเคราะห์เสมอ
-- ตอบกระชับ มีโครงสร้าง ชัดเจน
+Important rules:
+- Explain technical terms in plain, easy-to-understand language
+- Focus on neuroscience and EEG interpretation
+- Always remind the user that this analysis is preliminary screening only, not a medical diagnosis
+- If you find severely abnormal values, recommend seeing a doctor promptly
+- Always use the EEG data the user sends as the basis for your analysis
+- Be concise, structured, and clear
 """
+
+# Per-language reply directives appended to the system prompt.
+LANGUAGE_DIRECTIVES = {
+    "th": "Language directive: Reply entirely in Thai (ภาษาไทย). Keep technical terms (EEG, band names, indices) in their standard form.",
+    "en": "Language directive: Reply entirely in English.",
+}
+
+
+def build_system_prompt(language: Optional[str] = None) -> str:
+    """System prompt + the reply-language directive for the active UI language."""
+    directive = LANGUAGE_DIRECTIVES.get((language or "en").lower(), LANGUAGE_DIRECTIVES["en"])
+    return f"{SYSTEM_PROMPT}\n{directive}"
 
 
 def _build_system_context(eeg_context: Dict) -> str:
     """Turns whatever metrics/features the caller sends into a short grounding block for the model."""
-    lines = ["บริบทข้อมูล EEG ล่าสุดของผู้ใช้:"]
+    lines = ["Latest EEG data context for the user:"]
     for key, value in eeg_context.items():
         lines.append(f"- {key}: {value}")
-    return "\n".join(lines) if len(lines) > 1 else "ไม่มีข้อมูล EEG ประกอบในขณะนี้"
+    return "\n".join(lines) if len(lines) > 1 else "No EEG data available at this time."
 
 
 class DeepSeekBrainConsultant:
@@ -65,12 +79,18 @@ class DeepSeekBrainConsultant:
     def is_configured(self) -> bool:
         return bool(self.api_key.strip())
 
-    async def consult(self, user_prompt: str, eeg_context: Optional[Dict] = None) -> Dict:
+    async def consult(
+        self,
+        user_prompt: str,
+        eeg_context: Optional[Dict] = None,
+        language: Optional[str] = None,
+    ) -> Dict:
         """
         Returns {"reply": str, "flagged_markers": list[str], "latency_ms": float}.
 
-        Raises HTTPException(500) when the API key is missing or the API call fails.
-        No mock/fallback path.
+        `language` ("th" | "en") selects the reply-language directive; defaults
+        to English. Raises HTTPException(500) when the API key is missing or
+        the API call fails. No mock/fallback path.
         """
         eeg_context = eeg_context or {}
         start = time.perf_counter()
@@ -89,7 +109,7 @@ class DeepSeekBrainConsultant:
                     json={
                         "model": self.model,
                         "messages": [
-                            {"role": "system", "content": SYSTEM_PROMPT},
+                            {"role": "system", "content": build_system_prompt(language)},
                             {"role": "user", "content": _build_system_context(eeg_context)},
                             {"role": "user", "content": user_prompt},
                         ],

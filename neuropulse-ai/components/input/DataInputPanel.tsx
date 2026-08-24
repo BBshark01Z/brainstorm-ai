@@ -6,6 +6,7 @@ import { useDataSource } from "@/hooks/useDataSource";
 import { InputModeToggle } from "./InputModeToggle";
 import { FileUploadPanel } from "./FileUploadPanel";
 import { WebSocketPanel } from "./WebSocketPanel";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 export function DataInputPanel({
   mode,
@@ -16,10 +17,11 @@ export function DataInputPanel({
   onModeChange: (mode: InputMode) => void;
   dataSource: ReturnType<typeof useDataSource>;
 }) {
+  const { t } = useLanguage();
   return (
     <GlowPanel glow="cyan" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-display text-sm font-semibold text-ink">Real-Time Data Input</h2>
+        <h2 className="font-display text-sm font-semibold text-ink">{t("dash.dataInput")}</h2>
         <InputModeToggle value={mode} onChange={onModeChange} />
       </div>
 

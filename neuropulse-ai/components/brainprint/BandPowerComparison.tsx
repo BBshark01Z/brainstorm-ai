@@ -5,6 +5,7 @@ import { useEEGContext } from "@/hooks/useEEGContext";
 import { EEGBand, EEG_BAND_RANGES } from "@/lib/types";
 import { apiFetch, FetchErrorType } from "@/lib/fetchWithHealth";
 import { TrendingUp, Info, ExternalLink, Filter } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -89,13 +90,13 @@ const BAND_LABELS: Record<EEGBand, string> = {
   gamma: "Gamma",
 };
 
-const STAGE_LABELS: Record<string, string> = {
-  W: "Wake",
-  N1: "N1 (Light 1)",
-  N2: "N2 (Light 2)",
-  N3: "N3 (Deep)",
-  REM: "REM",
-  "All stages": "All stages",
+const STAGE_KEYS: Record<string, string> = {
+  W: "bp.stage.W",
+  N1: "bp.stage.N1",
+  N2: "bp.stage.N2",
+  N3: "bp.stage.N3",
+  REM: "bp.stage.REM",
+  "All stages": "bp.stage.all",
 };
 
 const STAGE_ORDER = ["W", "N1", "N2", "N3", "REM"];
@@ -241,6 +242,7 @@ const BOTH_COMBINED = "Both combined";
  * so newly imported subjects appear automatically.
  */
 export function useReferenceSelector() {
+  const { t } = useLanguage();
   const [sleepStage, setSleepStage] = useState("All stages");
   const [subjectId, setSubjectId] = useState(BOTH_COMBINED);
   const [subjects, setSubjects] = useState<SubjectOption[]>([]);
@@ -314,9 +316,9 @@ export function useReferenceSelector() {
       if (!result.ok) {
         const err = result.error;
         if (err.type === FetchErrorType.NETWORK) {
-          setError("Reference data unavailable — backend may be offline");
+          setError(t("bp.error.network"));
         } else {
-          setError(err.detail || "Failed to load reference data");
+          setError(err.detail || t("bp.error.generic"));
         }
         setAggregates([]);
         return;
@@ -347,12 +349,12 @@ export function useReferenceSelector() {
       setAggregates(displayData);
     } catch (err) {
       if (seq !== compareSeq.current) return;
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : t("bp.error.unknown"));
       setAggregates([]);
     } finally {
       if (seq === compareSeq.current) setLoading(false);
     }
-  }, [sleepStage, subjectId]);
+  }, [sleepStage, subjectId, t]);
 
   // Initial load on mount
   useEffect(() => {
@@ -431,6 +433,7 @@ export function ReferenceSelector({
   loading: boolean;
   fetchReference: () => void;
 }) {
+  const { t } = useLanguage();
   // The active subject's epoch count — revealed only once that card is the
   // selected subject. Before any subject is selected (default "Both combined"),
   // no epoch-length value is rendered at all (see Task I step 3).
@@ -448,13 +451,13 @@ export function ReferenceSelector({
   return (
     <div className="rounded-lg border border-base-border bg-base-overlay/50 p-3">
       <p className="mb-2 text-xs font-medium text-ink-muted">
-        Reference Data Filter
+        {t("bp.ref.filter")}
       </p>
 
       {/* Sleep stage chips */}
       <div className="mb-3">
         <p className="mb-1.5 text-[10px] font-medium text-ink-muted">
-          Sleep Stage
+          {t("bp.ref.sleepStage")}
         </p>
         <div className="flex flex-wrap gap-1.5">
           {SLEEP_STAGES.map((s) => (
@@ -464,7 +467,7 @@ export function ReferenceSelector({
               onClick={() => setSleepStage(s)}
               className={`${chipBase} ${sleepStage === s ? chipActive : chipIdle}`}
             >
-              {STAGE_LABELS[s] ?? s}
+              {STAGE_KEYS[s] ? t(STAGE_KEYS[s]) : s}
             </button>
           ))}
         </div>
@@ -473,7 +476,7 @@ export function ReferenceSelector({
       {/* Subject cards */}
       <div>
         <p className="mb-1.5 text-[10px] font-medium text-ink-muted">
-          Subject
+          {t("bp.ref.subject")}
         </p>
         <div className="grid grid-cols-2 gap-1.5">
           <button
@@ -483,7 +486,7 @@ export function ReferenceSelector({
               subjectId === BOTH_COMBINED ? chipActive : chipIdle
             }`}
           >
-            <span className="text-xs font-medium">Both combined</span>
+            <span className="text-xs font-medium">{t("bp.ref.both")}</span>
           </button>
           {subjects.map((s) => (
             <button
@@ -497,7 +500,7 @@ export function ReferenceSelector({
               <span className="text-xs font-medium">{s.subject_id}</span>
               {subjectId === s.subject_id && activeSubject && (
                 <span className="text-[10px] opacity-70">
-                  {activeSubject.epoch_count.toLocaleString()} epochs
+                  {t("bp.ref.epochs", { count: activeSubject.epoch_count.toLocaleString() })}
                 </span>
               )}
             </button>
@@ -511,7 +514,7 @@ export function ReferenceSelector({
         className="mt-3 flex items-center gap-1.5 rounded-md bg-neural/10 px-3 py-1.5 text-xs font-medium text-neural transition-colors hover:bg-neural/20 disabled:opacity-50"
       >
         <Filter size={12} />
-        {loading ? "Loading..." : "Compare"}
+        {loading ? t("bp.ref.loading") : t("bp.ref.compare")}
       </button>
     </div>
   );
@@ -540,24 +543,25 @@ function SubjectInfoBox({
   selectedSubject: { subject_id: string; epoch_count: number };
   subjectMeta: SubjectMeta | null;
 }) {
+  const { t } = useLanguage();
   return (
     <div className="rounded-lg border border-base-border bg-base-overlay/50 p-3">
       <div className="mb-2 flex items-center gap-2">
         <Info size={14} className="shrink-0 text-neural" />
         <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
-          Reference Subject
+          {t("bp.ref.boxTitle")}
         </span>
       </div>
 
       <div className="space-y-1">
         <div className="flex items-baseline justify-between">
-          <span className="text-[10px] text-ink-faint">Subject</span>
+          <span className="text-[10px] text-ink-faint">{t("bp.ref.subject")}</span>
           <span className="font-mono text-xs font-medium text-ink">
             {selectedSubject.subject_id}
           </span>
         </div>
         <div className="flex items-baseline justify-between">
-          <span className="text-[10px] text-ink-faint">Epochs</span>
+          <span className="text-[10px] text-ink-faint">{t("bp.ref.epochsRow")}</span>
           <span className="font-mono text-xs tabular-nums text-ink">
             {selectedSubject.epoch_count.toLocaleString()}
           </span>
@@ -568,24 +572,24 @@ function SubjectInfoBox({
           <>
             {subjectMeta.age > 0 && (
               <div className="flex items-baseline justify-between">
-                <span className="text-[10px] text-ink-faint">Age</span>
-                <span className="text-xs text-ink">{subjectMeta.age} yrs</span>
+                <span className="text-[10px] text-ink-faint">{t("bp.ref.age")}</span>
+                <span className="text-xs text-ink">{t("bp.ref.yrs", { count: subjectMeta.age })}</span>
               </div>
             )}
             {subjectMeta.sex && (
               <div className="flex items-baseline justify-between">
-                <span className="text-[10px] text-ink-faint">Sex</span>
+                <span className="text-[10px] text-ink-faint">{t("bp.ref.sex")}</span>
                 <span className="text-xs text-ink">{subjectMeta.sex}</span>
               </div>
             )}
             {subjectMeta.nights.length > 0 && (
               <div className="flex items-baseline justify-between gap-3">
-                <span className="text-[10px] text-ink-faint">Recordings</span>
+                <span className="text-[10px] text-ink-faint">{t("bp.ref.recordings")}</span>
                 <span className="text-right text-xs text-ink">
                   {subjectMeta.nights.length}{" "}
-                  {subjectMeta.nights.length === 1 ? "night" : "nights"}
+                  {t(subjectMeta.nights.length === 1 ? "bp.ref.night" : "bp.ref.nights")}
                   <span className="block text-[10px] text-ink-faint">
-                    lights off {subjectMeta.nights.map((n) => n.lights_off).join(" / ")}
+                    {t("bp.ref.lightsOff", { times: subjectMeta.nights.map((n) => n.lights_off).join(" / ") })}
                   </span>
                 </span>
               </div>
@@ -598,7 +602,7 @@ function SubjectInfoBox({
       <div className="mt-3 border-t border-base-border/60 pt-2">
         <p className="text-[10px] text-ink-faint">
           {(subjectMeta?.dataset_name ?? "Sleep-EDF Database Expanded") +
-            " (Sleep Cassette study), PhysioNet"}
+            t("bp.ref.datasetSuffix")}
         </p>
         {/* Direct link to this subject's actual raw PSG recording. */}
         {subjectMeta?.source_url && (
@@ -681,6 +685,7 @@ export function BandPowerComparison({
   subjectMeta,
 }: BandPowerComparisonProps) {
   const { latestSample } = useEEGContext();
+  const { t } = useLanguage();
 
   // Need at least one sample to show anything
   if (!latestSample) {
@@ -689,12 +694,12 @@ export function BandPowerComparison({
         <div className="flex items-center gap-2">
           <TrendingUp size={16} className="text-neural" />
           <h3 className="text-sm font-display font-semibold text-ink">
-            Band Power vs. Reference Dataset
+            {t("bp.band.title")}
           </h3>
         </div>
         <div className="flex flex-col items-center justify-center gap-2 p-8 text-center text-ink-faint">
           <TrendingUp size={20} className="opacity-40" />
-          <p className="text-sm">Connect to an EEG data source to compare band power against reference values.</p>
+          <p className="text-sm">{t("bp.band.connectHint")}</p>
         </div>
       </div>
     );
@@ -709,12 +714,12 @@ export function BandPowerComparison({
         <div className="flex items-center gap-2">
           <TrendingUp size={16} className="text-neural" />
           <h3 className="text-sm font-display font-semibold text-ink">
-            Band Power vs. Reference Dataset
+            {t("bp.band.title")}
           </h3>
         </div>
         {filterApplied && (
           <span className="text-[10px] text-ink-faint">
-            Filter: {filterApplied}
+            {t("bp.band.filter")}{filterApplied}
           </span>
         )}
       </div>
@@ -729,7 +734,7 @@ export function BandPowerComparison({
 
       {loading && aggregates.length === 0 && (
         <div className="flex flex-col items-center justify-center gap-2 p-8 text-center text-ink-faint">
-          <p className="text-sm">Loading reference data...</p>
+          <p className="text-sm">{t("bp.band.loading")}</p>
         </div>
       )}
 
@@ -743,7 +748,7 @@ export function BandPowerComparison({
       {!loading && !error && aggregates.length === 0 && (
         <div className="flex flex-col items-center justify-center gap-2 p-8 text-center text-ink-faint">
           <Info size={20} className="opacity-40" />
-          <p className="text-sm">No reference data matches the selected filters.</p>
+          <p className="text-sm">{t("bp.band.noMatch")}</p>
         </div>
       )}
 
@@ -754,10 +759,10 @@ export function BandPowerComparison({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-base-border text-ink-muted">
-                  <th className="pb-2 pr-4 font-medium">Band</th>
-                  <th className="pb-2 pr-4 text-right font-medium">Your Value</th>
-                  <th className="pb-2 pr-4 text-right font-medium">Reference Mean ± SD</th>
-                  <th className="pb-2 font-medium">Match</th>
+                  <th className="pb-2 pr-4 font-medium">{t("bp.band.colBand")}</th>
+                  <th className="pb-2 pr-4 text-right font-medium">{t("bp.band.colYour")}</th>
+                  <th className="pb-2 pr-4 text-right font-medium">{t("bp.band.colRef")}</th>
+                  <th className="pb-2 font-medium">{t("bp.band.colMatch")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-base-border/50">
@@ -789,11 +794,11 @@ export function BandPowerComparison({
                           <span className="text-ink-faint">—</span>
                         ) : inRange ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-vital/10 px-2 py-0.5 text-[10px] font-medium text-vital">
-                            In Range
+                            {t("bp.band.inRange")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-risk-amber/10 px-2 py-0.5 text-[10px] font-medium text-risk-amber">
-                            Outside
+                            {t("bp.band.outside")}
                           </span>
                         )}
                       </td>
@@ -811,20 +816,22 @@ export function BandPowerComparison({
                 <Info size={14} className="mt-0.5 shrink-0 text-ink-faint" />
                 <div className="flex-1">
                   <p className="text-[11px] font-medium text-ink-muted">
-                    Reference: Sleep-EDF Database Expanded
+                    {t("bp.band.reference")}
                   </p>
                   {/* Epoch-length value only shown once a single real subject is
                       selected, using its exact deterministic DB epoch_count —
                       not a re-summed aggregate. Hidden under "Both combined". */}
                   {selectedSubject ? (
                     <p className="mt-.5 text-[10px] text-ink-faint">
-                      {selectedSubject.subject_id}:{" "}
-                      {selectedSubject.epoch_count.toLocaleString()} epochs
-                      {filterApplied && ` (${filterApplied})`}
+                      {t("bp.band.epochCount", {
+                        id: selectedSubject.subject_id,
+                        count: selectedSubject.epoch_count.toLocaleString(),
+                        filter: filterApplied ? ` (${filterApplied})` : "",
+                      })}
                     </p>
                   ) : (
                     <p className="mt-.5 text-[10px] text-ink-faint">
-                      Select a subject to view its epoch count
+                      {t("bp.band.selectSubject")}
                     </p>
                   )}
                   <a
@@ -837,8 +844,8 @@ export function BandPowerComparison({
                     className="mt-1 inline-flex items-center gap-1 text-[10px] text-neural underline underline-offset-2 transition-colors hover:text-neural/80"
                   >
                     {subjectMeta?.source_file
-                      ? `${subjectMeta.source_file} on PhysioNet`
-                      : "View on PhysioNet"}
+                      ? t("bp.ref.fileOnPhysionet", { file: subjectMeta.source_file })
+                      : t("bp.ref.viewPhysionet")}
                     <ExternalLink size={10} />
                   </a>
                 </div>

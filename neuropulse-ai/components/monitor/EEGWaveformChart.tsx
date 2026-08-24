@@ -3,6 +3,7 @@
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import { EEGSample, EEG_BAND_RANGES } from "@/lib/types";
 import { GlowPanel } from "@/components/ui/primitives";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 const BAND_COLORS: Record<string, string> = {
   delta: "#6366F1", // indigo
@@ -13,14 +14,15 @@ const BAND_COLORS: Record<string, string> = {
 };
 
 export function EEGWaveformChart({ data }: { data: EEGSample[] }) {
+  const { t } = useLanguage();
   const chartData = data.map((sample, i) => ({ index: i, ...sample }));
 
   return (
     <GlowPanel glow="cyan" className="lg:col-span-3">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="font-display text-sm font-semibold text-ink">Multi-Channel EEG Waveform</h2>
-          <p className="text-xs text-ink-faint">Live band power · µV</p>
+          <h2 className="font-display text-sm font-semibold text-ink">{t("dash.waveformTitle")}</h2>
+          <p className="text-xs text-ink-faint">{t("dash.waveformSub")}</p>
         </div>
         <div className="flex flex-wrap gap-3">
           {Object.entries(BAND_COLORS).map(([band, color]) => (

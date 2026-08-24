@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguage } from "@/hooks/useLanguageContext";
 import { Brain, Eye, Shield, User } from "lucide-react";
 
 export default function RegisterPage() {
@@ -10,7 +12,8 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register, error } = useAuth();
+  const { register, errorText } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,6 +79,11 @@ export default function RegisterPage() {
             "0 0 60px -12px rgba(139, 92, 246, 0.22), 0 0 120px -24px rgba(6, 182, 212, 0.12)",
         }}
       >
+        {/* Language toggle — top-right of the card */}
+        <div className="absolute right-4 top-4">
+          <LanguageToggle />
+        </div>
+
         {/* Top accent line */}
         <div
           className="h-0.5 w-full"
@@ -99,23 +107,23 @@ export default function RegisterPage() {
               <Brain size={28} className="text-violet-400" />
             </div>
             <h1 className="font-display text-2xl font-bold tracking-tight text-white">
-              Join <span className="text-violet-400">Brainstorm</span>
+              {t("auth.join")} <span className="text-violet-400">Brainstorm</span>
             </h1>
-            <p className="mt-2 text-sm font-medium text-slate-400">Create your neural profile</p>
+            <p className="mt-2 text-sm font-medium text-slate-400">{t("auth.createProfile")}</p>
             <div className="glass-pill mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1">
               <Shield size={10} className="text-emerald-400" />
-              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400/70">Encrypted Registration</span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400/70">{t("auth.encrypted")}</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-            {error && (
+            {errorText && (
               <div
                 className="flex items-center gap-2 rounded-lg border border-red-500/30 px-4 py-2.5 text-sm text-red-400"
                 style={{ background: "rgba(239, 68, 68, 0.08)" }}
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
-                {error}
+                {errorText}
               </div>
             )}
 
@@ -123,7 +131,7 @@ export default function RegisterPage() {
             <div>
               <label htmlFor="nickname" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
                 <User size={11} />
-                Nickname
+                {t("auth.nickname")}
               </label>
               <input
                 id="nickname"
@@ -140,7 +148,7 @@ export default function RegisterPage() {
             <div>
               <label htmlFor="email" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
                 <Eye size={11} />
-                Email Address
+                {t("auth.email")}
               </label>
               <input
                 id="email"
@@ -157,7 +165,7 @@ export default function RegisterPage() {
             <div>
               <label htmlFor="password" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
                 <Shield size={11} />
-                Password
+                {t("auth.password")}
               </label>
               <input
                 id="password"
@@ -173,15 +181,15 @@ export default function RegisterPage() {
                 className="mt-2 rounded-lg border border-slate-700/30 px-3 py-2"
                 style={{ background: "rgba(15, 23, 42, 0.4)" }}
               >
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">Requirements</p>
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">{t("auth.requirements")}</p>
                 <ul className="space-y-0.5 text-[10px] text-slate-500">
                   <li className="flex items-center gap-1.5">
                     <span className="h-1 w-1 rounded-full bg-cyan-400/60" />
-                    At least 6 characters
+                    {t("auth.req6")}
                   </li>
                   <li className="flex items-center gap-1.5">
                     <span className="h-1 w-1 rounded-full bg-cyan-400/60" />
-                    Mix letters, numbers, and symbols
+                    {t("auth.reqMix")}
                   </li>
                 </ul>
               </div>
@@ -197,7 +205,7 @@ export default function RegisterPage() {
                 transitionTimingFunction: "var(--ease-out-expo)",
               }}
             >
-              <span className="relative z-10">{isSubmitting ? "Creating..." : "Create Account"}</span>
+              <span className="relative z-10">{isSubmitting ? t("auth.creating") : t("auth.createAccountBtn")}</span>
               <div
                 className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                 style={{ background: "linear-gradient(135deg, #7C3AED, #0891B2)" }}
@@ -207,12 +215,12 @@ export default function RegisterPage() {
 
           {/* Login link */}
           <p className="mt-6 text-center text-sm text-slate-500">
-            Already have an account?{" "}
+            {t("auth.haveAccount")}{" "}
             <a
               href="/login"
               className="font-medium text-violet-400 transition-colors hover:text-violet-300 hover:underline"
             >
-              Sign in
+              {t("auth.signInLink")}
             </a>
           </p>
         </div>

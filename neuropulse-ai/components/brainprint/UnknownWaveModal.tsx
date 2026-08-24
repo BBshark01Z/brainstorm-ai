@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
 import { AlertTriangle, X, Save } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 export function UnknownWaveModal({
   capturedVector,
@@ -15,6 +16,7 @@ export function UnknownWaveModal({
   onSave: (nickname: string) => void;
   onDismiss: () => void;
 }) {
+  const { t } = useLanguage();
   const [nickname, setNickname] = useState("");
   const chartData = capturedVector.map((v, i) => ({ index: i, value: v }));
 
@@ -24,7 +26,7 @@ export function UnknownWaveModal({
         <div className="mb-4 flex items-start justify-between">
           <div className="flex items-center gap-2 text-risk-orange">
             <AlertTriangle size={18} className="animate-flicker" />
-            <h2 className="font-display text-sm font-semibold">New / Unknown Brainwave Signature</h2>
+            <h2 className="font-display text-sm font-semibold">{t("bp.unknown.title")}</h2>
           </div>
           <button onClick={onDismiss} className="text-ink-faint hover:text-ink">
             <X size={16} />
@@ -32,8 +34,7 @@ export function UnknownWaveModal({
         </div>
 
         <p className="mb-3 text-xs text-ink-muted">
-          This capture didn't match any enrolled profile (best match: {similarityScore.toFixed(1)}%, below the
-          verification threshold). Give this pattern a nickname to add it to the Brainprint database.
+          {t("bp.unknown.body", { score: similarityScore.toFixed(1) })}
         </p>
 
         <div className="mb-4 h-20 w-full rounded-lg border border-base-border bg-base-overlay/40 p-2">
@@ -45,18 +46,18 @@ export function UnknownWaveModal({
         </div>
 
         <label className="mb-4 block text-xs text-ink-muted">
-          Set Nickname for this Pattern / Person
+          {t("bp.unknown.nicknameLabel")}
           <input
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
-            placeholder='e.g. "Mom - Meditating", "User B"'
+            placeholder={t("bp.unknown.nicknamePlaceholder")}
             className="mt-1 w-full rounded-lg border border-base-border bg-base-overlay/50 px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-neural/50"
           />
         </label>
 
         <div className="flex justify-end gap-2">
           <button onClick={onDismiss} className="rounded-lg px-4 py-2 text-sm text-ink-muted hover:text-ink">
-            Dismiss
+            {t("bp.unknown.dismiss")}
           </button>
           <button
             onClick={() => nickname.trim() && onSave(nickname.trim())}
@@ -64,7 +65,7 @@ export function UnknownWaveModal({
             className="flex items-center gap-2 rounded-lg bg-neural px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
           >
             <Save size={14} />
-            Save &amp; Train into Brainprint Database
+            {t("bp.unknown.save")}
           </button>
         </div>
       </div>

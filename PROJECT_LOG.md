@@ -860,7 +860,7 @@ These can be cleaned up in a future refactor if desired.
   Browser console: `api/qwen-chat/history:1 Failed to load resource: the server responded with a status of 401 (Unauthorized)`
 - **Root Cause**: Two issues:
   1. `.env` loading used `str(Path(...))` which worked but was inconsistent โ€” changed to explicit `dotenv_path=` parameter for clarity and reliability.
-  2. `SECRET_KEY` was hardcoded differently in `.env` (`neuropulse_super_secret_key_2026_tech`) vs the default in `main.py` (`neuropulse-dev-secret-key-change-in-production`). If `.env` failed to load (wrong working directory, missing file), the fallback key wouldn't match the token issued by a previous server instance.
+  2. `SECRET_KEY` was hardcoded differently in `.env` (`[REDACTED-SECRET]`) vs the default in `main.py` (`[REDACTED-SECRET]`). If `.env` failed to load (wrong working directory, missing file), the fallback key wouldn't match the token issued by a previous server instance.
 
 #### 2. Fix: Static SECRET_KEY + Absolute .env Path
 
@@ -874,15 +874,15 @@ These can be cleaned up in a future refactor if desired.
 
 2. **`SECRET_KEY`** โ€” use a fixed static value (never random, never changes between restarts):
    ```diff
-   - SECRET_KEY = os.getenv("SECRET_KEY", "neuropulse-dev-secret-key-change-in-production")
-   + SECRET_KEY = os.getenv("SECRET_KEY", "neurop-production-static-key")
+   - SECRET_KEY = os.getenv("SECRET_KEY", "[REDACTED-SECRET]")
+   + SECRET_KEY = os.getenv("SECRET_KEY", "[REDACTED-SECRET]")
    ```
 
 3. **Removed `import secrets`** โ€” was not used in the file (verified clean).
 
 **Changes in `.env` and `.env.example`**:
 
-- Set `SECRET_KEY=neurop-production-static-key` in both files to match the default in `main.py`.
+- Set `SECRET_KEY=[REDACTED-SECRET]` in both files to match the default in `main.py`.
 - `.env.example` now shows the actual production-static key instead of `change-me-to-a-random-string`.
 
 #### 3. Why Static SECRET_KEY?
@@ -896,8 +896,8 @@ These can be cleaned up in a future refactor if desired.
 | File | Action | Description |
 |------|--------|-------------|
 | `neuropulse-backend/main.py` | Modified | Fixed `.env` loading (`dotenv_path=`), static `SECRET_KEY` |
-| `neuropulse-backend/.env` | Modified | Updated `SECRET_KEY` to `neurop-production-static-key` |
-| `neuropulse-backend/.env.example` | Modified | Updated `SECRET_KEY` to `neurop-production-static-key` |
+| `neuropulse-backend/.env` | Modified | Updated `SECRET_KEY` to `[REDACTED-SECRET]` |
+| `neuropulse-backend/.env.example` | Modified | Updated `SECRET_KEY` to `[REDACTED-SECRET]` |
 | `PROJECT_LOG.md` | Updated | This log |
 
 ### Next Steps / Warnings
@@ -1018,15 +1018,15 @@ These can be cleaned up in a future refactor if desired.
 ### 2026-08-09+07:00 โ€” AI Consultant 401 Unauthorized (Post-SECRET_KEY Rotation): Stale JWT Token
 
 - **Symptom**: AI Consultant page returns "Not authenticated. Please log in." even when user is logged in. Browser console: `Failed to load resource: the server responded with a status of 401 (Unauthorized)`.
-- **Root Cause**: The JWT token stored in `localStorage` (`auth_token`) was signed with the **old** `SECRET_KEY` (`neuropulse-dev-secret-key-change-in-production`). After rotating to the **new** `SECRET_KEY` (`neurop-production-static-key`), the backend's `jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])` in `get_current_user()` (line 246 of `main.py`) throws `JWTError` โ’ raises 401. This is **not** a missing token or wrong header โ€” the token simply cannot be verified with the new key.
+- **Root Cause**: The JWT token stored in `localStorage` (`auth_token`) was signed with the **old** `SECRET_KEY` (`[REDACTED-SECRET]`). After rotating to the **new** `SECRET_KEY` (`[REDACTED-SECRET]`), the backend's `jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])` in `get_current_user()` (line 246 of `main.py`) throws `JWTError` โ’ raises 401. This is **not** a missing token or wrong header โ€” the token simply cannot be verified with the new key.
 
 #### 2. Verification โ€” All Checks Passed Except Token Freshness
 
 | Check | File | Line | Result |
 |-------|------|------|--------|
-| `.env` SECRET_KEY matches `main.py` default? | `.env:17` vs `main.py:121` | โ… | `neurop-production-static-key` in both |
+| `.env` SECRET_KEY matches `main.py` default? | `.env:17` vs `main.py:121` | โ… | `[REDACTED-SECRET]` in both |
 | `.env` loading correct? | `main.py:43` | โ… | `load_dotenv(dotenv_path=Path(__file__).parent / ".env")` โ€” absolute path, works regardless of cwd |
-| `os.getenv` picks up `.env` value? | `main.py:121` | โ… | `os.getenv("SECRET_KEY", "neurop-production-static-key")` โ€” env var takes priority, fallback matches |
+| `os.getenv` picks up `.env` value? | `main.py:121` | โ… | `os.getenv("SECRET_KEY", "[REDACTED-SECRET]")` โ€” env var takes priority, fallback matches |
 | Frontend sends `Authorization: Bearer` header? | `qwenApiHandler.ts:44` | โ… | `Authorization: Bearer ${token}` on POST `/api/qwen-chat` |
 | Frontend sends `Authorization: Bearer` header? | `AIChatInterface.tsx:41` | โ… | `Authorization: Bearer ${token}` on GET `/api/qwen-chat/history` |
 | Token extraction handles JSON object format? | `qwenApiHandler.ts:30-34` | โ… | Parses `{access_token: "...", token_type: "bearer"}` from localStorage |
@@ -1051,12 +1051,12 @@ The user **must log out and log in again** to get a fresh JWT token signed with 
 **Steps**:
 1. Restart backend: `uvicorn main:app --reload --port 8765`
 2. Navigate to frontend, click logout (or clear localStorage manually: `localStorage.removeItem("auth_token"); localStorage.removeItem("user")`)
-3. Log in again โ’ fresh JWT token signed with `neurop-production-static-key`
+3. Log in again โ’ fresh JWT token signed with `[REDACTED-SECRET]`
 4. Navigate to /ai-consultant โ’ should work without 401
 
 #### 5. Why This Won't Happen Again
 
-- `SECRET_KEY` is now **static** (`neurop-production-static-key`) โ€” it never changes between restarts or hot-reloads.
+- `SECRET_KEY` is now **static** (`[REDACTED-SECRET]`) โ€” it never changes between restarts or hot-reloads.
 - Both `.env` and the `main.py` fallback are set to the same value.
 - The only way the key changes is if someone explicitly edits `.env` โ€” in which case the 401 auto-clear handler will prompt re-login.
 

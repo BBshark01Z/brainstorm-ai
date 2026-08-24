@@ -5,6 +5,7 @@ import { Share2, Copy, Check, Loader2, AlertCircle } from "lucide-react";
 import clsx from "clsx";
 import { apiFetch, FetchErrorType } from "@/lib/fetchWithHealth";
 import { getBackendHttpUrl } from "@/lib/getBackendUrl";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 /**
  * ShareReportButton — A reusable button that creates a shareable report link.
@@ -39,6 +40,7 @@ export function ShareReportButton({
   onShare,
   className,
 }: ShareReportButtonProps) {
+  const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -137,17 +139,17 @@ export function ShareReportButton({
             loading && "opacity-50 cursor-wait"
           )}
           style={{ background: "rgba(168, 85, 247, 0.06)" }}
-          title="Create shareable report link"
+          title={t("dash.createShareTitle")}
         >
           {loading ? (
             <>
               <Loader2 size={12} className="animate-spin" />
-              Creating...
+              {t("dash.creating")}
             </>
           ) : (
             <>
               <Share2 size={12} />
-              Share Report
+              {t("dash.shareReport")}
             </>
           )}
         </button>
@@ -166,12 +168,12 @@ export function ShareReportButton({
             {copied ? (
               <>
                 <Check size={12} />
-                Copied!
+                {t("dash.copied")}
               </>
             ) : (
               <>
                 <Copy size={12} />
-                Copy Link
+                {t("dash.copyLink")}
               </>
             )}
           </button>

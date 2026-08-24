@@ -1,6 +1,7 @@
 "use client";
 
 import { useTypewriter } from "@/hooks/useTypewriter";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 // ---------------------------------------------------------------------------
 // TypewriterSubhead — the splash subhead is typed out on load (Option B copy),
@@ -9,8 +10,8 @@ import { useTypewriter } from "@/hooks/useTypewriter";
 // ---------------------------------------------------------------------------
 
 export function TypewriterSubhead() {
-  const subhead =
-    "An experimental platform for EEG monitoring, brain-print verification, and AI-driven analysis — built on simulated reference data for research, not clinical use.";
+  const { t } = useLanguage();
+  const subhead = t("splash.subhead");
   const { display, done } = useTypewriter(subhead, {});
 
   return (

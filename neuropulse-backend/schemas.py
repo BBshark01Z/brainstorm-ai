@@ -138,6 +138,7 @@ class BrainprintProfileSummary(BaseModel):
 class DeepSeekChatRequest(BaseModel):
     user_prompt: str = Field(..., min_length=1)
     eeg_context: Dict = Field(default_factory=dict, description="Latest metrics/features to ground the reply")
+    language: str = Field(default="en", pattern="^(th|en)$", description="Active UI language — the AI replies in this language")
 
 
 class DeepSeekChatResponse(BaseModel):
@@ -165,6 +166,7 @@ class AnalyticsTipRequest(BaseModel):
         default_factory=dict,
         description="Analytics metrics: current value, 30-day average, delta, improved flag per metric",
     )
+    language: str = Field(default="en", pattern="^(th|en)$", description="Active UI language — the tip is generated in this language")
 
 
 class AnalyticsTipResponse(BaseModel):

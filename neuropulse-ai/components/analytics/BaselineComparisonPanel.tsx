@@ -2,8 +2,19 @@ import { ArrowUp, ArrowDown, Minus } from "lucide-react";
 import clsx from "clsx";
 import { BaselineComparison } from "@/lib/types";
 import { GlowPanel } from "@/components/ui/primitives";
+import { useLanguage } from "@/hooks/useLanguageContext";
+
+// metricLabel (wire value from mockData) → i18n key. Unknown labels fall
+// back to the raw English string.
+const METRIC_LABEL_KEYS: Record<string, string> = {
+  "Burnout Risk": "an.metric.burnout",
+  "FAA Index": "an.metric.faa",
+  "Sleep Spindle Density": "an.metric.spindle",
+  "Slow-Wave Sleep": "an.metric.sws",
+};
 
 export function BaselineComparisonPanel({ rows }: { rows: BaselineComparison[] }) {
+  const { t } = useLanguage();
   const improvedCount = rows.filter(
     (row) => (row.higherIsBetter ? row.current > row.past30DayAverage : row.current < row.past30DayAverage)
   ).length;
@@ -14,12 +25,12 @@ export function BaselineComparisonPanel({ rows }: { rows: BaselineComparison[] }
         <div className="mb-1 flex items-start justify-between gap-3">
           <div>
             <h3 className="font-display text-sm font-semibold text-ink">
-              Current Baseline vs. Past 30-Day Average
+              {t("an.baseline.title")}
             </h3>
-            <p className="text-xs text-ink-faint">Positive direction depends on the metric</p>
+            <p className="text-xs text-ink-faint">{t("an.baseline.sub")}</p>
           </div>
           <div className="glass-pill shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-neon">
-            {improvedCount}/{rows.length} improving
+            {t("an.baseline.improving", { count: improvedCount, total: rows.length })}
           </div>
         </div>
 
@@ -32,10 +43,11 @@ export function BaselineComparisonPanel({ rows }: { rows: BaselineComparison[] }
             return (
               <div key={row.metricLabel} className="flex items-center justify-between py-3 transition-colors hover:bg-base-overlay/20">
                 <div>
-                  <p className="text-sm text-ink">{row.metricLabel}</p>
+                  <p className="text-sm text-ink">
+                    {METRIC_LABEL_KEYS[row.metricLabel] ? t(METRIC_LABEL_KEYS[row.metricLabel]) : row.metricLabel}
+                  </p>
                   <p className="text-xs text-ink-faint">
-                    30-day avg: {row.past30DayAverage}
-                    {row.unit}
+                    {t("an.baseline.avg30", { value: row.past30DayAverage, unit: row.unit })}
                   </p>
                 </div>
                 <div className="text-right">

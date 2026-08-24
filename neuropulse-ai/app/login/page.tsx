@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguage } from "@/hooks/useLanguageContext";
 import { Brain, Eye, Shield } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, error } = useAuth();
+  const { login, errorText } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,6 +77,11 @@ export default function LoginPage() {
             "0 0 60px -12px rgba(6, 182, 212, 0.22), 0 0 120px -24px rgba(139, 92, 246, 0.12)",
         }}
       >
+        {/* Language toggle — top-right of the card */}
+        <div className="absolute right-4 top-4">
+          <LanguageToggle />
+        </div>
+
         {/* Top accent line */}
         <div
           className="h-0.5 w-full"
@@ -99,21 +107,21 @@ export default function LoginPage() {
             <h1 className="font-display text-2xl font-bold tracking-tight text-white">
               Brain<span className="text-cyan-400">storm</span> AI
             </h1>
-            <p className="mt-2 text-sm font-medium text-slate-400">Neural Monitoring Platform</p>
+            <p className="mt-2 text-sm font-medium text-slate-400">{t("auth.platform")}</p>
             <div className="glass-pill mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1">
               <Shield size={10} className="text-emerald-400" />
-              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400/70">Secure Connection</span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400/70">{t("auth.secureConnection")}</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-            {error && (
+            {errorText && (
               <div
                 className="flex items-center gap-2 rounded-lg border border-red-500/30 px-4 py-2.5 text-sm text-red-400"
                 style={{ background: "rgba(239, 68, 68, 0.08)" }}
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
-                {error}
+                {errorText}
               </div>
             )}
 
@@ -121,7 +129,7 @@ export default function LoginPage() {
             <div>
               <label htmlFor="email" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
                 <Eye size={11} />
-                Email Address
+                {t("auth.email")}
               </label>
               <input
                 id="email"
@@ -138,7 +146,7 @@ export default function LoginPage() {
             <div>
               <label htmlFor="password" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
                 <Shield size={11} />
-                Password
+                {t("auth.password")}
               </label>
               <input
                 id="password"
@@ -161,7 +169,7 @@ export default function LoginPage() {
                 transitionTimingFunction: "var(--ease-out-expo)",
               }}
             >
-              <span className="relative z-10">{isSubmitting ? "Connecting..." : "Sign In"}</span>
+              <span className="relative z-10">{isSubmitting ? t("auth.connecting") : t("auth.signIn")}</span>
               <div
                 className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                 style={{ background: "linear-gradient(135deg, #0891B2, #7C3AED)" }}
@@ -171,12 +179,12 @@ export default function LoginPage() {
 
           {/* Register link */}
           <p className="mt-6 text-center text-sm text-slate-500">
-            Don&apos;t have an account?{" "}
+            {t("auth.noAccount")}{" "}
             <a
               href="/register"
               className="font-medium text-cyan-400 transition-colors hover:text-cyan-300 hover:underline"
             >
-              Create account
+              {t("auth.createAccount")}
             </a>
           </p>
         </div>

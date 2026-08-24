@@ -4,6 +4,7 @@ import { Fingerprint, ScanLine, Loader2, CheckCircle2 } from "lucide-react";
 import clsx from "clsx";
 import { ScanStatus } from "@/hooks/useBrainprintScan";
 import { GlowPanel } from "@/components/ui/primitives";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 export function BrainprintScanner({
   status,
@@ -20,6 +21,7 @@ export function BrainprintScanner({
   setSubjectIndex: (i: number) => void;
   subjects: { id: number; label: string }[];
 }) {
+  const { t } = useLanguage();
   const isScanning = status === "scanning";
   const isProcessing = status === "processing";
   const isActive = isScanning || isProcessing;
@@ -57,19 +59,19 @@ export function BrainprintScanner({
       <div>
         <p className="font-display text-sm font-semibold text-ink">
           {isScanning
-            ? "Capturing Neural Signature..."
+            ? t("bp.scanner.capturing")
             : isProcessing
-            ? "Matching against Brainprint database..."
+            ? t("bp.scanner.matching")
             : isCaptured
-            ? "Signature Captured"
-            : "Ready to Scan"}
+            ? t("bp.scanner.captured")
+            : t("bp.scanner.ready")}
         </p>
         <p className="mt-1 text-xs text-ink-faint">
           {isActive
-            ? "Hold still — reading frontal & temporal electrode activity"
+            ? t("bp.scanner.holdStill")
             : isCaptured
-            ? "See the result panel to the right"
-            : "Place the headset and start a verification scan"}
+            ? t("bp.scanner.seeResult")
+            : t("bp.scanner.placeHeadset")}
         </p>
       </div>
 
@@ -91,13 +93,13 @@ export function BrainprintScanner({
             style={{ transitionTimingFunction: "var(--ease-out-expo)" }}
         >
           <ScanLine size={16} />
-          {status === "idle" ? "Start Verification Scan" : "Scan Again"}
+          {status === "idle" ? t("bp.scanner.start") : t("bp.scanner.again")}
         </button>
       )}
 
       {!isActive && (
         <label className="flex flex-col items-center gap-1.5 text-xs text-ink-faint">
-          <span>Simulated subject</span>
+          <span>{t("bp.scanner.simSubject")}</span>
           <select
             value={subjectIndex}
             onChange={(e) => setSubjectIndex(Number(e.target.value))}
@@ -114,7 +116,7 @@ export function BrainprintScanner({
 
       {subjectIndex !== undefined && isActive && (
         <p className="text-xs text-ink-faint">
-          Scanning as {currentSubject.label}
+          {t("bp.scanner.scanningAs", { label: currentSubject.label })}
         </p>
       )}
     </GlowPanel>

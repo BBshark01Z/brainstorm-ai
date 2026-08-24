@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter, IBM_Plex_Mono } from "next/font/google";
 import { EEGProvider } from "@/hooks/useEEGContext";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BrainprintProvider } from "@/hooks/useBrainprintContext";
+import { LanguageProvider } from "@/hooks/useLanguageContext";
 import PageTransition from "@/components/layout/PageTransition";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { NeuralWaveBackground } from "@/components/ui/NeuralWaveBackground";
@@ -35,15 +36,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Site-wide ambient neural plexus — runs behind every route, subtle by
             default, full "hero" density only on the splash page. */}
         <NeuralWaveBackground />
-        <AuthProvider>
-          <EEGProvider>
-            <BrainprintProvider>
-              <PageTransition>
-                <DashboardShell>{children}</DashboardShell>
-              </PageTransition>
-            </BrainprintProvider>
-          </EEGProvider>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <EEGProvider>
+              <BrainprintProvider>
+                <PageTransition>
+                  <DashboardShell>{children}</DashboardShell>
+                </PageTransition>
+              </BrainprintProvider>
+            </EEGProvider>
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

@@ -3,7 +3,15 @@
 import { Bluetooth, BluetoothOff, Fingerprint, ShieldCheck, Activity } from "lucide-react";
 import { ConnectionStatus, BrainprintStatus } from "@/lib/types";
 import { StatusPill } from "@/components/ui/primitives";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { useLanguage } from "@/hooks/useLanguageContext";
 import clsx from "clsx";
+
+const WS_LABEL_KEYS: Record<string, string> = {
+  Streaming: "status.streaming",
+  Connecting: "status.connecting",
+  Disconnected: "status.disconnected",
+};
 
 export function Header({
   connection,
@@ -14,6 +22,7 @@ export function Header({
   brainprintStatus: BrainprintStatus;
   wsLabel?: string;
 }) {
+  const { t } = useLanguage();
   const verified = brainprintStatus === "verified";
   const isStreaming = wsLabel === "Streaming";
 
@@ -27,10 +36,10 @@ export function Header({
     >
       <div>
         <h1 className="font-display text-base font-semibold text-white sm:text-lg">
-          Real-time Brain Monitor
+          {t("header.realTimeMonitor")}
         </h1>
         <p className="text-xs text-slate-500">
-          Session active · data refreshes every 150ms
+          {t("header.sessionActive")}
           {wsLabel && (
             <span className="ml-2 inline-flex items-center gap-1.5">
               <span
@@ -43,7 +52,7 @@ export function Header({
                 }}
               />
               <span className={clsx("text-[10px] font-semibold uppercase tracking-wider", isStreaming ? "text-emerald-400" : "text-red-400")}>
-                {wsLabel}
+                {t(WS_LABEL_KEYS[wsLabel] ?? "status.disconnected")}
               </span>
             </span>
           )}
@@ -51,6 +60,7 @@ export function Header({
       </div>
 
       <div className="flex items-center gap-2">
+        <LanguageToggle />
         <StatusPill
           icon={
             isStreaming ? (
@@ -63,10 +73,10 @@ export function Header({
           }
           label={
             isStreaming
-              ? `EEG Stream · ${connection.deviceName}`
+              ? t("header.streamActive", { name: connection.deviceName })
               : connection.connected
-                ? `${connection.deviceName} · ${connection.signalStrength}%`
-                : "No EEG Stream"
+                ? t("header.connectedLabel", { name: connection.deviceName, signal: connection.signalStrength })
+                : t("header.noEegStream")
           }
           tone={isStreaming || connection.connected ? "vital" : "risk"}
         />
@@ -78,7 +88,7 @@ export function Header({
               <Fingerprint size={14} className="text-slate-500" />
             )
           }
-          label={verified ? "Brainprint Verified" : "Not Verified"}
+          label={verified ? t("header.brainprintVerified") : t("header.notVerified")}
           tone={verified ? "neural" : "neutral"}
         />
       </div>

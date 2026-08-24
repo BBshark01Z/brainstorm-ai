@@ -3,6 +3,15 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, AuthTokens } from "@/lib/types";
 import { apiFetch, FetchErrorType } from "@/lib/fetchWithHealth";
+import { useLanguage } from "@/hooks/useLanguageContext";
+
+// Errors are stored as translation keys (with optional interpolation vars)
+// and resolved to display text at render time, so a language switch after
+// the error appeared re-translates it without re-triggering the request.
+export interface AuthError {
+  key: string;
+  vars?: Record<string, string | number>;
+}
 
 interface AuthResponse {
   access_token: string;
@@ -21,41 +30,34 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, nickname: string) => Promise<void>;
   logout: () => void;
-  error: string | null;
+  error: AuthError | null;
+  /** The error message resolved in the current UI language. */
+  errorText: string;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-/**
- * Attempt to parse an error response from the backend.
- *
- * FastAPI returns structured JSON on validation / HTTPException:
- *   { "detail": "..." }
- *
- * On network errors (ECONNREFUSED, etc.) `fetch` throws a TypeError
- * before we ever see a Response, so the caller must handle that case.
- */
-async function parseApiError(res: Response): Promise<string> {
-  const data = await res.json().catch(() => ({}));
-  const backendMsg = data.detail || data.message || "";
+/** Throw a structured auth error (carries a translation key, not display text).
+ *  Backend `detail` text is passed through untranslated (server-side dynamic
+ *  content); only the fallback messages are translated. */
+function throwAuthError(key: string, vars?: Record<string, string | number>): never {
+  throw { key, vars };
+}
 
-  if (res.status === 401) {
-    return backendMsg || "Invalid email or password";
+/** Normalize a caught value into an AuthError. */
+function toAuthError(err: unknown): AuthError {
+  if (err && typeof err === "object" && "key" in err) {
+    return err as AuthError;
   }
-  if (res.status === 400) {
-    return backendMsg || "Invalid input. Please check your data and try again";
-  }
-  if (res.status === 409) {
-    return backendMsg || "This email is already registered";
-  }
-  return backendMsg || `Server error (${res.status})`;
+  return { key: "auth.err.unknown" };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [tokens, setTokens] = useState<AuthTokens | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<AuthError | null>(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("auth_token");
@@ -85,9 +87,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!result.ok) {
         const err = result.error;
         if (err.type === FetchErrorType.NETWORK) {
-          throw new Error("Cannot connect to the backend server (please ensure Uvicorn is running on port 8765)");
+          throwAuthError("auth.err.network");
         }
-        throw new Error(err.detail || `Server error (${err.status})`);
+        if (err.detail) throwAuthError(err.detail);
+        throwAuthError("auth.err.server", { status: err.status ?? "unknown" });
       }
 
       const data = result.data;
@@ -102,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("auth_token", JSON.stringify({ access_token: data.access_token, token_type: data.token_type }));
       localStorage.setItem("user", JSON.stringify(user));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(toAuthError(err));
       throw err;
     } finally {
       setIsLoading(false);
@@ -122,9 +125,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!result.ok) {
         const err = result.error;
         if (err.type === FetchErrorType.NETWORK) {
-          throw new Error("Cannot connect to the backend server (please ensure Uvicorn is running on port 8765)");
+          throwAuthError("auth.err.network");
         }
-        throw new Error(err.detail || `Server error (${err.status})`);
+        if (err.detail) throwAuthError(err.detail);
+        throwAuthError("auth.err.server", { status: err.status ?? "unknown" });
       }
 
       // Auto-login after successful registration
@@ -137,9 +141,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!loginResult.ok) {
         const err = loginResult.error;
         if (err.type === FetchErrorType.NETWORK) {
-          throw new Error("Cannot connect to the backend server (please ensure Uvicorn is running on port 8765)");
+          throwAuthError("auth.err.network");
         }
-        throw new Error(err.detail || `Server error (${err.status})`);
+        if (err.detail) throwAuthError(err.detail);
+        throwAuthError("auth.err.server", { status: err.status ?? "unknown" });
       }
 
       const loginData = loginResult.data;
@@ -154,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("auth_token", JSON.stringify({ access_token: loginData.access_token, token_type: loginData.token_type }));
       localStorage.setItem("user", JSON.stringify(user));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(toAuthError(err));
       throw err;
     } finally {
       setIsLoading(false);
@@ -169,9 +174,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("user");
   };
 
+  const errorText = error ? t(error.key, error.vars) : "";
+
   return (
     <AuthContext.Provider value={{
-      user, tokens, isLoading, isAuthenticated: !!user, login, register, logout, error,
+      user, tokens, isLoading, isAuthenticated: !!user, login, register, logout, error, errorText,
     }}>
       {children}
     </AuthContext.Provider>

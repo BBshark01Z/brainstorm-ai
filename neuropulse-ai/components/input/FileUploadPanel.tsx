@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { UploadCloud, Play, Pause, FileWarning } from "lucide-react";
 import { FileIngestionResult } from "@/lib/types";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 export function FileUploadPanel({
   result,
@@ -20,6 +21,7 @@ export function FileUploadPanel({
   const [isDragging, setIsDragging] = useState(false);
   const [pastedText, setPastedText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useLanguage();
 
   return (
     <div className="flex flex-col gap-3">
@@ -45,9 +47,9 @@ export function FileUploadPanel({
       >
         <UploadCloud size={24} className="text-vital" />
         <p className="text-xs text-ink-muted">
-          Drop a <span className="font-medium text-cyan-400/70">.csv</span>,{" "}
-          <span className="font-medium text-cyan-400/70">.json</span>, or{" "}
-          <span className="font-medium text-cyan-400/70">.edf-like</span> file, or click to browse
+          {t("dash.dropPrefix")} <span className="font-medium text-cyan-400/70">.csv</span>,{" "}
+          <span className="font-medium text-cyan-400/70">.json</span>, {t("dash.dropMid")}{" "}
+          <span className="font-medium text-cyan-400/70">.edf-like</span> {t("dash.dropSuffix")}
         </p>
         <input
           ref={inputRef}
@@ -64,12 +66,12 @@ export function FileUploadPanel({
       {/* Pasted text input */}
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-          Or paste raw data
+          {t("dash.pasteLabel")}
         </label>
         <textarea
           value={pastedText}
           onChange={(e) => setPastedText(e.target.value)}
-          placeholder="e.g. 12.4, 15.1, 9.8, 22.3 ..."
+          placeholder={t("dash.pastePlaceholder")}
           rows={3}
           className="w-full rounded-lg border border-slate-700/50 bg-slate-900/50 px-3.5 py-2.5 font-mono text-xs text-white placeholder-slate-600 transition-all focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20"
         />
@@ -78,7 +80,7 @@ export function FileUploadPanel({
           disabled={!pastedText.trim()}
           className="self-start rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-2 text-xs font-medium text-cyan-400 transition-all hover:bg-cyan-500/15 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Play Pasted Array
+          {t("dash.playPasted")}
         </button>
       </div>
 
@@ -98,11 +100,11 @@ export function FileUploadPanel({
               className="flex items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-[11px] font-medium text-cyan-400 transition-all hover:bg-cyan-500/15 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {isPlaying ? <Pause size={11} /> : <Play size={11} />}
-              {isPlaying ? "Pause" : "Play"}
+              {isPlaying ? t("dash.pause") : t("dash.play")}
             </button>
           </div>
           <p className="text-[11px] text-slate-500">
-            {result.samples.length} samples · {result.format.toUpperCase()}
+            {t("dash.samplesCount", { count: result.samples.length, format: result.format.toUpperCase() })}
           </p>
           {result.warnings.length > 0 && (
             <div className="mt-2 flex flex-col gap-1.5">

@@ -3,10 +3,11 @@ import { Wifi, WifiOff, Loader2, AlertCircle, Zap, Clock, Share2, Copy, Check } 
 import { useState, useCallback } from "react";
 import { WebSocketConnectionState } from "@/lib/types";
 import { getBackendHttpUrl } from "@/lib/getBackendUrl";
+import { useLanguage } from "@/hooks/useLanguageContext";
 
 const STATE_CONFIG: Record<WebSocketConnectionState, {
-  label: string;
-  sublabel: string;
+  labelKey: string;
+  sublabelKey: string;
   tone: string;
   dotColor: string;
   dotGlow: string;
@@ -14,8 +15,8 @@ const STATE_CONFIG: Record<WebSocketConnectionState, {
   bgTint: string;
 }> = {
   disconnected: {
-    label: "Disconnected",
-    sublabel: "Connect to start streaming",
+    labelKey: "dash.ws.disconnected",
+    sublabelKey: "dash.ws.disconnectedSub",
     tone: "text-slate-500",
     dotColor: "#64748B",
     dotGlow: "0 0 4px rgba(100, 116, 139, 0.4)",
@@ -23,8 +24,8 @@ const STATE_CONFIG: Record<WebSocketConnectionState, {
     bgTint: "rgba(100, 116, 139, 0.03)",
   },
   connecting: {
-    label: "Connecting…",
-    sublabel: "Establishing WebSocket link",
+    labelKey: "dash.ws.connecting",
+    sublabelKey: "dash.ws.connectingSub",
     tone: "text-amber-400",
     dotColor: "#F59E0B",
     dotGlow: "0 0 6px rgba(245, 158, 11, 0.5)",
@@ -32,8 +33,8 @@ const STATE_CONFIG: Record<WebSocketConnectionState, {
     bgTint: "rgba(245, 158, 11, 0.04)",
   },
   connected: {
-    label: "Streaming",
-    sublabel: "Live EEG data flowing",
+    labelKey: "dash.ws.connected",
+    sublabelKey: "dash.ws.connectedSub",
     tone: "text-emerald-400",
     dotColor: "#10B981",
     dotGlow: "0 0 8px rgba(16, 185, 129, 0.6)",
@@ -41,8 +42,8 @@ const STATE_CONFIG: Record<WebSocketConnectionState, {
     bgTint: "rgba(16, 185, 129, 0.04)",
   },
   error: {
-    label: "Connection Failed",
-    sublabel: "Check backend or try again",
+    labelKey: "dash.ws.error",
+    sublabelKey: "dash.ws.errorSub",
     tone: "text-red-400",
     dotColor: "#EF4444",
     dotGlow: "0 0 6px rgba(239, 68, 68, 0.5)",
@@ -96,6 +97,7 @@ export function WebSocketPanel({
   onConnect: () => void;
   onDisconnect: () => void;
 }) {
+  const { t } = useLanguage();
   const config = STATE_CONFIG[connectionState];
   const isConnected = connectionState === "connected";
   const isConnecting = connectionState === "connecting";
@@ -141,9 +143,9 @@ export function WebSocketPanel({
                 }}
               />
             )}
-            {config.label}
+            {t(config.labelKey)}
           </div>
-          <span className="text-[10px] text-slate-600">{config.sublabel}</span>
+          <span className="text-[10px] text-slate-600">{t(config.sublabelKey)}</span>
         </div>
         <div className="flex items-center gap-2">
           {/* Share button */}
@@ -159,17 +161,17 @@ export function WebSocketPanel({
             style={{
               background: isConnected ? "rgba(168, 85, 247, 0.06)" : "transparent",
             }}
-            title="Copy share link"
+            title={t("dash.copyShareLink")}
           >
             {copied ? (
               <>
                 <Check size={12} />
-                Copied!
+                {t("dash.copied")}
               </>
             ) : (
               <>
                 <Share2 size={12} />
-                Share
+                {t("dash.share")}
               </>
             )}
           </button>
@@ -192,12 +194,12 @@ export function WebSocketPanel({
             {isConnected ? (
               <>
                 <WifiOff size={12} />
-                Disconnect
+                {t("dash.disconnect")}
               </>
             ) : (
               <>
                 <Zap size={12} />
-                Connect
+                {t("dash.connect")}
               </>
             )}
           </button>
@@ -208,7 +210,7 @@ export function WebSocketPanel({
       <div>
         <label className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
           <Wifi size={10} />
-          WebSocket Endpoint
+          {t("dash.wsEndpoint")}
         </label>
         <input
           value={url}
@@ -236,23 +238,23 @@ export function WebSocketPanel({
           <>
             <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
               <Zap size={10} className="text-emerald-400" />
-              <span className="text-emerald-400/80">Live</span>
+              <span className="text-emerald-400/80">{t("dash.live")}</span>
             </div>
             <div className="h-3 w-px bg-slate-700/50" />
             <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
               <Clock size={10} />
-              <span>~300ms intervals</span>
+              <span>{t("dash.intervals")}</span>
             </div>
             <div className="h-3 w-px bg-slate-700/50" />
             <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-              <span className="text-cyan-400/80">Heartbeat</span>
-              <span className="text-emerald-400/60">ON</span>
+              <span className="text-cyan-400/80">{t("dash.heartbeat")}</span>
+              <span className="text-emerald-400/60">{t("dash.on")}</span>
             </div>
           </>
         ) : (
           <div className="flex items-center gap-1.5 text-[10px] text-slate-600">
             <Clock size={10} />
-            <span>Auto-reconnect enabled · Max 50 attempts</span>
+            <span>{t("dash.autoReconnect")}</span>
           </div>
         )}
       </div>
@@ -278,9 +280,9 @@ export function WebSocketPanel({
       >
         <span className="mt-0.5 text-[10px] text-cyan-400/60">i</span>
         <p className="text-[10px] leading-relaxed text-slate-500">
-          Expects newline-delimited JSON frames shaped like{" "}
+          {t("dash.wsInfoPrefix")}{" "}
           <code className="font-mono text-cyan-400/60">{"{ delta, theta, alpha, beta, gamma }"}</code>{" "}
-          from your Python EEG bridge.
+          {t("dash.wsInfoSuffix")}
         </p>
       </div>
     </div>
