@@ -98,7 +98,7 @@ from schemas import (
 )
 from services import feature_extractor
 from services.analytics_tip import build_analytics_tip_fallback
-from services.deepseek_service import build_system_prompt, _build_system_context, DeepSeekBrainConsultant
+from services.deepseek_service import build_system_prompt, _build_system_context, DeepSeekBrainConsultant, MAX_TOKENS, TEMPERATURE
 
 # ---------------------------------------------------------------------------
 # Load trained brain-state model at startup
@@ -657,6 +657,8 @@ async def deepseek_chat(
                         "model": deepseek_consultant.model,
                         "messages": all_messages,
                         "stream": True,
+                        "max_tokens": MAX_TOKENS,
+                        "temperature": TEMPERATURE,
                     },
                 ) as response:
                     if response.status_code >= 400:

@@ -220,19 +220,26 @@ def main():
         contents = [m.get("content", "") for m in msgs]
 
         ok("system" in roles, "messages include the system prompt (no mojibake path)")
-        # Confirm the system prompt is the correct DeepSeek/Thai prompt.
+        # Confirm the system prompt is the correct service-module prompt (English,
+        # language-neutral — the reply-language directive is appended separately).
         sys_content = next((m.get("content", "") for m in msgs if m.get("role") == "system"), "")
-        ok("แพลตฟอร์ม NeuroPulse AI" in sys_content,
-           "system prompt is correctly-encoded UTF-8 Thai (reused from service module)")
+        ok("AI Neuro-Consultant for the NeuroPulse AI platform" in sys_content,
+           "system prompt is the service-module prompt (reused, no mojibake path)")
+        ok("Do not include greetings, introductory fluff, or closing summaries" in sys_content,
+           "system prompt enforces the concise-response style rules")
 
         # Confirm eeg_context reached the gateway, not just the DB.
-        any_ctx = any("บริบทข้อมูล EEG ล่าสุดของผู้ใช้" in c for c in contents)
+        any_ctx = any("Latest EEG data context for the user" in c for c in contents)
         ok(any_ctx, "eeg_context grounding block present in outgoing messages")
         all_values_present = all(
             str(v) in json.dumps(contents, ensure_ascii=False)
             for v in (0.35, 0.22, 0.28, 61.0)
         )
         ok(all_values_present, "concrete eeg_context values reached the outgoing request")
+
+        # Confirm the speed-tuned generation parameters reached the gateway.
+        ok(captured.get("max_tokens") == 300, "max_tokens=300 sent to gateway")
+        ok(captured.get("temperature") == 0.3, "temperature=0.3 sent to gateway")
 
         saved = os.path.join(ROOT, "mock_gateway_messages.txt")
         with open(saved, "w", encoding="utf-8") as f:

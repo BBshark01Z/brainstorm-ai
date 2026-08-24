@@ -22,6 +22,11 @@ DEEPSEEK_API_ENDPOINT = os.getenv(
 )
 DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "qwen3.8-27b-fp8")
 
+# Generation parameters tuned for speed: a hard token cap keeps completions
+# short and fast; a low temperature keeps answers direct and consistent.
+MAX_TOKENS = 300
+TEMPERATURE = 0.3
+
 # Language-neutral system prompt. The reply language is NOT baked in here —
 # it is appended per-request via build_system_prompt(language) so the model
 # always answers in the language the user selected in the UI (th / en).
@@ -39,7 +44,12 @@ Important rules:
 - Always remind the user that this analysis is preliminary screening only, not a medical diagnosis
 - If you find severely abnormal values, recommend seeing a doctor promptly
 - Always use the EEG data the user sends as the basis for your analysis
-- Be concise, structured, and clear
+
+Response style (strict — speed and clarity come first):
+- You are the AI Consultant for Brainstorm/Neuropulse. Always provide direct, concise, and scannable answers.
+- Do not include greetings, introductory fluff, or closing summaries.
+- Keep responses strictly under 4 sentences, or use concise bullet points when listing items.
+- Focus on speed and clarity.
 """
 
 # Per-language reply directives appended to the system prompt.
@@ -113,6 +123,8 @@ class DeepSeekBrainConsultant:
                             {"role": "user", "content": _build_system_context(eeg_context)},
                             {"role": "user", "content": user_prompt},
                         ],
+                        "max_tokens": MAX_TOKENS,
+                        "temperature": TEMPERATURE,
                     },
                 )
                 response.raise_for_status()
