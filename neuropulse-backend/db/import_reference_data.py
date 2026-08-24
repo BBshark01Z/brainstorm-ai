@@ -3,8 +3,11 @@ import_reference_data.py
 
 Populate eeg_reference_data from Phase 2/3 computed results.
 
-Run:
-    python -m neuropulse-backend.db.import_reference_data [--dry-run]
+Run (no args → migrate + import every epoch JSON in the default data dir):
+    python -m db.import_reference_data [--dry-run]
+
+Run a single file explicitly:
+    python -m db.import_reference_data --json <path> --subject SC4001 --channel Fpz-Cz
 
 This script is intentionally separate from database.py to keep the
 core DB module untouched. It opens its own connection (per the
@@ -18,14 +21,29 @@ import argparse
 import json
 import logging
 import os
+import re
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("neuropulse.import_reference")
 
 DATABASE_PATH = os.getenv("DATABASE_PATH", "./data/brainprint.db")
+
+# Repo root is two levels above this file (…/neuropulse/neuropulse-backend/db).
+# The Phase 3 epoch exports live at the repo root, not under neuropulse-backend.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_DATA_DIR = REPO_ROOT / "reference-data" / "phase3_sleepstage"
+
+# Filename channel token → DB channel_name (must satisfy the CHECK constraint).
+CHANNEL_MAP: Dict[str, str] = {
+    "FpzCz": "Fpz-Cz",
+    "PzOz": "Pz-Oz",
+}
+
+# Matches epoch export filenames like epochs_SC4001_FpzCz.json.
+EPOCHS_FILENAME_RE = re.compile(r"^epochs_(?P<subject>.+)_(?P<channel>FpzCz|PzOz)\.json$")
 
 # The migration SQL (must match Phase 4 RESULTS.md exactly)
 MIGRATION_SQL = """
@@ -191,12 +209,36 @@ def import_from_json(
     return inserted
 
 
+def discover_epoch_files(data_dir: Path) -> List[Tuple[Path, str, str]]:
+    """
+    Find epoch JSON exports in data_dir.
+
+    Returns a list of (json_path, subject_id, channel_name) tuples parsed from
+    filenames matching epochs_<subject>_<FpzCz|PzOz>.json. Files that don't
+    match the expected naming scheme are skipped with a warning.
+    """
+    found: List[Tuple[Path, str, str]] = []
+    for path in sorted(data_dir.glob("epochs_*.json")):
+        match = EPOCHS_FILENAME_RE.match(path.name)
+        if not match:
+            logger.warning("Skipping unrecognized filename: %s", path.name)
+            continue
+        found.append((path, match.group("subject"), CHANNEL_MAP[match.group("channel")]))
+    return found
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Import EEG reference data into SQLite")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be imported")
-    parser.add_argument("--json", dest="json_path", help="Path to epoch JSON file")
-    parser.add_argument("--subject", required=True, help="Subject ID (e.g. SC4001)")
-    parser.add_argument("--channel", required=True, help="Channel name (Fpz-Cz or Pz-Oz)")
+    parser.add_argument("--json", dest="json_path", help="Path to a single epoch JSON file")
+    parser.add_argument("--subject", help="Subject ID (e.g. SC4001); required with --json")
+    parser.add_argument("--channel", help="Channel name (Fpz-Cz or Pz-Oz); required with --json")
+    parser.add_argument(
+        "--data-dir",
+        type=Path,
+        default=DEFAULT_DATA_DIR,
+        help="Directory of epoch JSON files for the default (no --json) mode",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
@@ -204,13 +246,25 @@ def main() -> None:
     conn = _get_connection()
     try:
         migrate(conn)
+
         if args.json_path:
+            if not args.subject or not args.channel:
+                parser.error("--json requires both --subject and --channel")
             count = import_from_json(
                 conn, args.json_path, args.subject, args.channel, args.dry_run
             )
             print(f"Rows inserted: {count}")
         else:
-            print("Usage: --json <path> --subject <id> --channel <name>")
+            if not args.data_dir.is_dir():
+                raise FileNotFoundError(f"Data directory not found: {args.data_dir}")
+            files = discover_epoch_files(args.data_dir)
+            if not files:
+                logger.warning("No epoch JSON files found in %s", args.data_dir)
+            total = 0
+            for json_path, subject_id, channel_name in files:
+                logger.info("Importing %s (subject=%s, channel=%s)", json_path.name, subject_id, channel_name)
+                total += import_from_json(conn, json_path, subject_id, channel_name, args.dry_run)
+            print(f"Processed {len(files)} files, rows inserted: {total}")
     finally:
         conn.close()
 
