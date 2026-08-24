@@ -125,6 +125,17 @@ class DeepSeekBrainConsultant:
                         ],
                         "max_tokens": MAX_TOKENS,
                         "temperature": TEMPERATURE,
+                        # The gateway serves a reasoning model (Qwen3.8-27B-FP8 via
+                        # vLLM). By default it writes its chain-of-thought into
+                        # `reasoning_content` and the answer into `content`, sharing
+                        # the same `max_tokens` budget. With the low MAX_TOKENS tuned
+                        # for speed, the model spent the whole budget reasoning and
+                        # returned `content: null` (finish_reason "length") —
+                        # surfacing as an "empty DeepSeek reply" and forcing the
+                        # offline fallback. Disabling thinking makes the full token
+                        # budget go to the answer, which both fixes the empty reply
+                        # and keeps responses fast.
+                        "chat_template_kwargs": {"enable_thinking": False},
                     },
                 )
                 response.raise_for_status()
