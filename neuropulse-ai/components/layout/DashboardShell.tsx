@@ -10,6 +10,7 @@ import { BrainprintStatus } from "@/lib/types";
 import { useAuth } from "@/hooks/useAuth";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import { CreditsModal } from "./CreditsModal";
 
 // ---------------------------------------------------------------------------
 // App-wide status context.
@@ -73,6 +74,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   // Move all hooks BEFORE any conditional returns (Rules of Hooks)
   const [brainprintStatus, setBrainprintStatus] = useState<BrainprintStatus>("idle");
+  const [creditsOpen, setCreditsOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -115,9 +117,14 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   return (
     <AppStatusContext.Provider value={{ brainprintStatus, setBrainprintStatus }}>
       <div className="relative flex min-h-screen bg-[#060810]">
-        <Sidebar />
+        <Sidebar onOpenCredits={() => setCreditsOpen(true)} />
         <div className="flex min-h-screen flex-1 flex-col">
-          <Header connection={connection} brainprintStatus={brainprintStatus} wsLabel="Streaming" />
+          <Header
+            connection={connection}
+            brainprintStatus={brainprintStatus}
+            wsLabel="Streaming"
+            onOpenCredits={() => setCreditsOpen(true)}
+          />
           <main
             className="flex-1 overflow-y-auto p-4 pb-20 sm:p-6 lg:pb-6"
             style={{
@@ -132,6 +139,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </main>
         </div>
         <MobileTabBar />
+        <CreditsModal open={creditsOpen} onClose={() => setCreditsOpen(false)} />
       </div>
     </AppStatusContext.Provider>
   );

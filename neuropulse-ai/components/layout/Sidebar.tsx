@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { Activity, Fingerprint, LineChart, Bot, Brain } from "lucide-react";
+import { Activity, Fingerprint, LineChart, Bot, Brain, Sparkles } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguageContext";
 
 const NAV_ITEMS = [
@@ -13,7 +13,7 @@ const NAV_ITEMS = [
   { href: "/ai-consultant", label: "nav.aiConsultant", icon: Bot },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onOpenCredits }: { onOpenCredits?: () => void }) {
   const pathname = usePathname();
   const { t } = useLanguage();
 
@@ -99,6 +99,21 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {/* Credits — opens the SMTE attribution modal, not a route */}
+        <button
+          type="button"
+          onClick={onOpenCredits}
+          className="group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-400 transition-all hover:text-white"
+          style={{ border: "1px solid transparent" }}
+        >
+          <Sparkles
+            size={18}
+            strokeWidth={2}
+            className="text-slate-500 transition-colors group-hover:text-amber-300"
+          />
+          {t("nav.credits")}
+        </button>
       </nav>
 
       {/* Bottom status */}

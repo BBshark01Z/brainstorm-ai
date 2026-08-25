@@ -27,6 +27,7 @@ export const translations: Record<string, TranslationEntry> = {
   "nav.brainprint": { th: "Brainprint", en: "Brainprint" },
   "nav.analytics": { th: "การวิเคราะห์", en: "Analytics" },
   "nav.aiConsultant": { th: "ที่ปรึกษา AI", en: "AI Consultant" },
+  "nav.credits": { th: "เกี่ยวกับผู้พัฒนา (Credits)", en: "About the Developers (Credits)" },
   "nav.systemOnline": { th: "ระบบออนไลน์", en: "System Online" },
 
   // --- Header ---
@@ -324,7 +325,26 @@ export const translations: Record<string, TranslationEntry> = {
   "ai.inputPlaceholder": { th: "ถามเกี่ยวกับสุขภาพสมองของคุณ…", en: "Ask about your brain health…" },
   "ai.diag.title": { th: "การวินิจฉัย AI รายวันอัตโนมัติ", en: "Automated Daily AI Diagnostics" },
   "ai.diag.empty": { th: "ยังไม่มีข้อมูลวินิจฉัย", en: "No diagnostics yet" },
-  "ai.diag.emptyHint": { th: "เชื่อมต่อ EEG Stream แบบสดและทำสแกน Brainprint ให้เสร็จ เพื่อสร้างข้อมูลเชิงลึกประจำวันอัตโนมัติที่นี่", en: "Connect a live EEG stream and complete a Brainprint scan to generate automated daily insights here." }
+  "ai.diag.emptyHint": { th: "เชื่อมต่อ EEG Stream แบบสดและทำสแกน Brainprint ให้เสร็จ เพื่อสร้างข้อมูลเชิงลึกประจำวันอัตโนมัติที่นี่", en: "Connect a live EEG stream and complete a Brainprint scan to generate automated daily insights here." },
+
+  // --- Credits modal (SMTE attribution) ---
+  "credits.title": { th: "เกี่ยวกับผู้พัฒนา", en: "About the Developers" },
+  "credits.close": { th: "ปิด", en: "Close" },
+  "credits.devLabel": { th: "นักพัฒนาและผู้นำทีมสร้างสรรค์", en: "Developer & Lead Creator" },
+  "credits.smteNotice": { th: "โครงการนี้จัดทำขึ้นโดยเฉพาะเพื่อเข้าร่วมการแข่งขัน SMTE (Science, Mathematics, Technology, and Environment) Project Competition จาก Ayutthayawitthalai School Team<3.", en: "This project was created exclusively for competing in the SMTE (Science, Mathematics, Technology, and Environment) Project Competition from Ayutthayawitthalai School Team<3." },
+  "credits.techStack": { th: "เทคโนโลยีที่ใช้", en: "Tech Stack" },
+  "credits.backendTitle": { th: "ระบบหลังบ้านและวิศวกรรมหลัก", en: "Backend & Core Engineering" },
+  "credits.frontendTitle": { th: "ระบบหน้าบ้านและวิศวกรรม UI/UX", en: "Frontend & UI/UX Engineering" },
+  "credits.backend.backend1": { th: "สถาปัตยกรรม FastAPI REST API", en: "FastAPI REST API architecture" },
+  "credits.backend.backend2": { th: "การประมวลผลสัญญาณ EEG (Band Power: Delta, Theta, Alpha, Beta, Gamma) และอัลกอริทึมการจำแนกช่วงการนอน", en: "EEG signal processing (Band Power: Delta, Theta, Alpha, Beta, Gamma) & sleep staging algorithms" },
+  "credits.backend.backend3": { th: "การออกแบบ schema ของ SQLite พร้อมการย้ายข้อมูล seed อัตโนมัติใน Phase 4", en: "SQLite schema design with Phase 4 automated seed migration" },
+  "credits.backend.backend4": { th: "การเชื่อมต่อ DeepSeek/Qwen LLM พร้อมการปรับลดความหน่วงและโหมดคิด", en: "DeepSeek/Qwen LLM integration with latency/thinking-mode optimizations" },
+  "credits.backend.backend5": { th: "การ deploy บน Render Cloud", en: "Render Cloud deployment" },
+  "credits.frontend.frontend1": { th: "การออกแบบ UI โหมดมืดสไตล์ไซเบอร์เฮลท์สำหรับ Next.js (App Router)", en: "Next.js (App Router) dark-mode cyber-health UI design" },
+  "credits.frontend.frontend2": { th: "กราฟ Brain Monitor แบบเรียลไทม์และ Longitudinal Analytics", en: "Real-time Brain Monitor & Longitudinal Analytics charts" },
+  "credits.frontend.frontend3": { th: "การจัดการสถานะ API พร้อมการจัดการ fallback ออฟไลน์ที่ทนทาน", en: "API state management with resilient offline fallback handling" },
+  "credits.frontend.frontend4": { th: "รองรับหลายภาษา (TH/EN)", en: "Multi-language support (TH/EN)" },
+  "credits.frontend.frontend5": { th: "Vercel Edge Deployment", en: "Vercel Edge Deployment" }
 
 };
 

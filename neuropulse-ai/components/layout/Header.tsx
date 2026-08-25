@@ -1,6 +1,6 @@
 "use client";
 
-import { Bluetooth, BluetoothOff, Fingerprint, ShieldCheck, Activity } from "lucide-react";
+import { Bluetooth, BluetoothOff, Fingerprint, ShieldCheck, Activity, Sparkles } from "lucide-react";
 import { ConnectionStatus, BrainprintStatus } from "@/lib/types";
 import { StatusPill } from "@/components/ui/primitives";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
@@ -17,10 +17,12 @@ export function Header({
   connection,
   brainprintStatus,
   wsLabel,
+  onOpenCredits,
 }: {
   connection: ConnectionStatus;
   brainprintStatus: BrainprintStatus;
   wsLabel?: string;
+  onOpenCredits?: () => void;
 }) {
   const { t } = useLanguage();
   const verified = brainprintStatus === "verified";
@@ -61,6 +63,19 @@ export function Header({
 
       <div className="flex items-center gap-2">
         <LanguageToggle />
+        <button
+          type="button"
+          onClick={onOpenCredits}
+          aria-label={t("credits.title")}
+          title={t("credits.title")}
+          className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition-all hover:text-amber-300"
+          style={{
+            background: "rgba(10, 15, 29, 0.7)",
+            border: "1px solid rgba(30, 42, 61, 0.8)",
+          }}
+        >
+          <Sparkles size={14} />
+        </button>
         <StatusPill
           icon={
             isStreaming ? (
