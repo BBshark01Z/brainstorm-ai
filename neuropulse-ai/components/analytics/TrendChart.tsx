@@ -5,6 +5,8 @@ import { LongitudinalDataPoint } from "@/lib/types";
 import { GlowPanel } from "@/components/ui/primitives";
 import { useLanguage } from "@/hooks/useLanguageContext";
 
+type YDomain = [number | "auto", number | "auto"];
+
 export function TrendChart({
   title,
   subtitle,
@@ -13,6 +15,8 @@ export function TrendChart({
   color,
   unit,
   index = 0,
+  domain,
+  infoKey,
 }: {
   title: string;
   subtitle: string;
@@ -21,11 +25,19 @@ export function TrendChart({
   color: string;
   unit?: string;
   index?: number;
+  /** Y-axis domain, set per metric (e.g. [0,100] for %, ['auto','auto'] for signed FAA). */
+  domain?: YDomain;
+  /** i18n key for the info-tooltip copy shown beside the title. */
+  infoKey?: string;
 }) {
   const { t } = useLanguage();
   const gradientId = `gradient-${dataKey}`;
   const latest = data[data.length - 1];
   const latestValue = latest ? (latest[dataKey] as number) : undefined;
+  // Signed metrics (FAA) read better with one decimal; whole-number metrics
+  // (percent, spindles/min) stay as-is.
+  const isDecimal = dataKey === "faaIndex";
+  const fmt = (v: number) => (isDecimal ? v.toFixed(1) : v.toLocaleString());
 
   return (
     <div className="rise-in" style={{ animationDelay: `${index * 70}ms` }}>
@@ -39,6 +51,28 @@ export function TrendChart({
                 style={{ background: color, boxShadow: `0 0 8px ${color}` }}
               />
               <h3 className="font-display text-sm font-semibold text-ink">{title}</h3>
+              {infoKey && (
+                <span className="group relative inline-flex" tabIndex={0}>
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    className="h-3.5 w-3.5 cursor-help text-ink-faint transition-colors group-hover:text-cyan-400 group-focus:text-cyan-400"
+                    aria-label={t(infoKey)}
+                  >
+                    <circle cx="10" cy="10" r="8.25" />
+                    <path d="M10 9v4.5" strokeLinecap="round" />
+                    <circle cx="10" cy="6.25" r="0.75" fill="currentColor" stroke="none" />
+                  </svg>
+                  <span
+                    role="tooltip"
+                    className="pointer-events-none absolute left-1/2 top-full z-20 mt-1.5 w-52 -translate-x-1/2 rounded-lg border border-base-border bg-base-overlay/95 px-3 py-2 text-[11px] leading-relaxed text-ink opacity-0 shadow-glow-cyan backdrop-blur-md transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100"
+                  >
+                    {t(infoKey)}
+                  </span>
+                </span>
+              )}
             </div>
             <p className="text-xs text-ink-faint">{subtitle}</p>
           </div>
@@ -46,7 +80,7 @@ export function TrendChart({
             <div className="shrink-0 rounded-lg border border-base-border bg-base-overlay/40 px-2 py-1 text-right">
               <span className="block text-[10px] uppercase tracking-wider text-ink-faint">{t("an.latest")}</span>
               <span className="font-mono text-sm font-semibold" style={{ color }}>
-                {latestValue.toLocaleString()}
+                {fmt(latestValue)}
                 {unit ?? ""}
               </span>
             </div>
@@ -71,10 +105,12 @@ export function TrendChart({
                 tickLine={false}
               />
               <YAxis
+                domain={domain ?? ["auto", "auto"]}
                 tick={{ fontSize: 10, fill: "#5B6478" }}
                 width={32}
                 axisLine={false}
                 tickLine={false}
+                tickFormatter={(v: number) => fmt(v)}
               />
               <Tooltip
                 contentStyle={{
@@ -87,7 +123,7 @@ export function TrendChart({
                 }}
                 labelStyle={{ color: "#8B96A8" }}
                 itemStyle={{ color: "#E6EDF7" }}
-                formatter={(value: number) => [`${value}${unit ?? ""}`, title]}
+                formatter={(value: number) => [`${fmt(value)}${unit ?? ""}`, title]}
               />
               <Area
                 type="monotone"

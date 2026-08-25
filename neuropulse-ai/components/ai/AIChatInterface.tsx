@@ -3,28 +3,13 @@
 import { useRef, useEffect, useState } from "react";
 import { Send, Bot, User, Loader2, Zap, ZapOff } from "lucide-react";
 import clsx from "clsx";
-import { ChatMessage, EEGSample, DerivedMetrics } from "@/lib/types";
+import { ChatMessage } from "@/lib/types";
 import { sendToDeepSeekAIStream } from "@/lib/deepseekApiHandler";
+import { buildLocalDiagnostic } from "@/lib/localDiagnostic";
 import { PromptChips } from "./PromptChips";
 import { apiFetch, FetchErrorType } from "@/lib/fetchWithHealth";
 import { useEEGContext } from "@/hooks/useEEGContext";
 import { useLanguage } from "@/hooks/useLanguageContext";
-
-// Use relative path — Next.js rewrites /api/* to the backend.
-// Works locally and behind Cloudflare/ngrok tunnel.
-const API_BASE = "";
-
-/** Reveals text progressively so a reply reads as "streaming".
- * A real SSE-based token stream from the DeepSeek backend would replace this with
- * chunks arriving from the network instead of a client-side timer. */
-async function streamReveal(text: string, onChunk: (partial: string) => void) {
-  const CHUNK = 3;
-  for (let i = 0; i <= text.length; i += CHUNK) {
-    onChunk(text.slice(0, i));
-    await new Promise((resolve) => setTimeout(resolve, 16));
-  }
-  onChunk(text);
-}
 
 /** Load chat history from the backend on mount. */
 async function loadChatHistory(rawToken: string): Promise<ChatMessage[]> {
@@ -162,20 +147,25 @@ export function AIChatInterface() {
     setInput("");
     setIsThinking(true);
 
+    // Declared outside try so the catch path can still address the active
+    // assistant bubble (to fill it with the local fallback on a hard error).
+    const assistantId = `msg-${Date.now()}-ai`;
+
     try {
       // Build a grounded EEG context snapshot so the AI can reference
       // the user's actual brain-state metrics instead of answering in a vacuum.
       const eegContext = buildEEGContextSnapshot();
-      const assistantId = `msg-${Date.now()}-ai`;
       setMessages((prev) => [
         ...prev,
         { id: assistantId, role: "assistant", content: "", timestamp: Date.now() },
       ]);
 
-      // Stream tokens from the backend in real-time
+      // Stream tokens from the backend in real-time. Each delta is appended
+      // directly to the active assistant message so text renders
+      // character-by-character in the bubble.
       setDeepSeekStatus("live");
       setDeepSeekReason(null);
-      await sendToDeepSeekAIStream(
+      const streamed = await sendToDeepSeekAIStream(
         prompt,
         eegContext,
         (token) => {
@@ -189,21 +179,36 @@ export function AIChatInterface() {
         },
         lang
       );
+
+      // Robust fallback: if the stream ended without yielding any text
+      // (empty gateway stream, SSE error, all chunks dropped), fill the
+      // active bubble with the local rule-based diagnostic so it is never
+      // left empty.
+      if (!streamed.trim()) {
+        const fallback = buildLocalDiagnostic(eegContext, lang);
+        setMessages((prev) =>
+          prev.map((m) => (m.id === assistantId ? { ...m, content: fallback } : m))
+        );
+        setDeepSeekStatus("error");
+        setDeepSeekReason(t("ai.fallbackNote"));
+      }
       setIsThinking(false);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t("ai.unknownError");
       setDeepSeekStatus("error");
       setDeepSeekReason(message);
       setIsThinking(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `err-${Date.now()}`,
-          role: "assistant",
-          content: t("ai.errorPrefix", { message }),
-          timestamp: Date.now(),
-        },
-      ]);
+      // Even on a hard stream error, fill the active bubble with the local
+      // rule-based diagnostic (plus the error reason) instead of leaving an
+      // empty bubble with a separate error message.
+      const eegContext = buildEEGContextSnapshot();
+      const fallback = buildLocalDiagnostic(eegContext, lang);
+      const content = `${t("ai.errorPrefix", { message })}\n\n${fallback}`;
+      setMessages((prev) =>
+        prev.some((m) => m.id === assistantId)
+          ? prev.map((m) => (m.id === assistantId ? { ...m, content } : m))
+          : [...prev, { id: assistantId, role: "assistant", content, timestamp: Date.now() }]
+      );
     }
   };
 

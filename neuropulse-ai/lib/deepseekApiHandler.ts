@@ -9,6 +9,7 @@
 
 import { DeepSeekAIResponse } from "./types";
 import { apiFetch, FetchErrorType } from "./fetchWithHealth";
+import { getBackendHttpUrl } from "./getBackendUrl";
 
 /**
  * Send a prompt to the backend AI consultant.
@@ -101,10 +102,10 @@ export async function sendToDeepSeekAIStream(
     throw new Error("Not authenticated. Please log in.");
   }
 
-  // Resolve backend base from the build-time env var; fall back to local dev.
-  // NEXT_PUBLIC_API_URL must be set at build time for deployed environments.
-  const apiUrl =
-    (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8765").replace(/\/+$/, "");
+  // Resolve the backend base URL through the shared helper (NEXT_PUBLIC_API_URL
+  // at build time, localhost:8765 in local dev) so this matches every other
+  // backend call in the app.
+  const apiUrl = getBackendHttpUrl();
 
   const res = await fetch(`${apiUrl}/api/deepseek-chat`, {
     method: "POST",
@@ -144,28 +145,52 @@ export async function sendToDeepSeekAIStream(
       const { done, value } = await reader.read();
       if (done) break;
 
+      // Decode incrementally; { stream: true } keeps a partial multi-byte
+      // UTF-8 sequence (Thai text!) in the decoder instead of corrupting it.
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? ""; // keep incomplete line in buffer
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith("data: ")) continue;
+      // Split on newlines but keep the (possibly incomplete) trailing line in
+      // the buffer. Handle both "\n" and Windows-style "\r\n" — a stray "\r"
+      // would otherwise break JSON.parse on the last field of each chunk.
+      const lines = buffer.split(/\r?\n/);
+      buffer = lines.pop() ?? "";
 
-        const payload = trimmed.slice(6);
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+
+        // SSE event lines: "data: <payload>". Tolerate "data:" with no space
+        // and ignore non-data SSE fields (event:, id:, retry:, comments).
+        if (!line.startsWith("data:")) continue;
+
+        const payload = line.slice(5).trimStart();
+        if (!payload) continue;
         if (payload === "[DONE]") continue;
 
+        let parsed: Record<string, unknown> | null = null;
         try {
-          const parsed = JSON.parse(payload);
-          if (parsed.error) {
-            throw new Error(parsed.error);
-          }
-          if (parsed.token) {
-            fullReply += parsed.token;
-            onToken(parsed.token);
-          }
+          parsed = JSON.parse(payload);
         } catch {
           // Non-JSON SSE line — skip
+          continue;
+        }
+
+        if (parsed.error) {
+          // Backend signalled a stream error — surface it so the caller can
+          // fall back to the local rule-based diagnostic.
+          throw new Error(String(parsed.error));
+        }
+
+        // Token payload: backend sends { token }; accept { text } / { content }
+        // defensively in case the wire format ever changes.
+        const delta =
+          (typeof parsed.token === "string" && parsed.token) ||
+          (typeof parsed.text === "string" && parsed.text) ||
+          (typeof parsed.content === "string" && parsed.content) ||
+          "";
+        if (delta) {
+          fullReply += delta;
+          onToken(delta);
         }
       }
     }

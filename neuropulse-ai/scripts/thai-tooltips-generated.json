@@ -1,0 +1,30 @@
+[
+  {
+    "key": "burnout",
+    "en": "Measures accumulated fatigue and stress (0-100%). A lower value means the brain recovers well.",
+    "draft": "วัดระดับความล้าและความเครียดสะสม (0-100%) ยิ่่งค่าน้อยแสดงว่าสมองฟื้่นตัวได้ดี",
+    "th": "วัดระดับความล้าและความเครียดสะสม (0-100%) ยิ่งค่าน้อยแสดงว่าสมองฟื้นตัวได้ดี",
+    "thCps": "0EE27 0EE31 0EE14 0EE23 0EE30 0EE14 0EE31 0EE1A 0EE04 0EE27 0EE32 0EE21 0EE25 0EE49 0EE32 0EE41 0EE25 0EE30 0EE04 0EE27 0EE32 0EE21 0EE40 0EE04 0EE23 0EE35 0EE22 0EE14 0EE2A 0EE30 0EE2A 0EE21   ( 0 - 1 0 0 % )   0EE22 0EE34 0EE48 0EE07 0EE04 0EE48 0EE32 0EE19 0EE49 0EE2D 0EE22 0EE41 0EE2A 0EE14 0EE07 0EE27 0EE48 0EE32 0EE2A 0EE21 0EE2D 0EE07 0EE1F 0EE37 0EE49 0EE19 0EE15 0EE31 0EE27 0EE44 0EE14 0EE49 0EE14 0EE35"
+  },
+  {
+    "key": "faa",
+    "en": "Index measuring emotional state. A positive value indicates a relaxed mood and positive motivation.",
+    "draft": "ดัชนีวัดสภาวะอารมณ์ ค่าเป็็นบวกบ่งบอกถึึงอารมณ์ผ่อ่นคลายและแรงจูงใจเชิงบวก",
+    "th": "ดัชนี FAA วัดสภาวะอารมณ์ ค่าเป็นบวกบ่งบอกถึงอารมณ์ผ่อนคลายและแรงจูงใจเชิงบวก",
+    "thCps": "0EE14 0EE31 0EE0A 0EE19 0EE35   F A A   0EE27 0EE31 0EE14 0EE2A 0EE20 0EE32 0EE27 0EE30 0EE2D 0EE32 0EE23 0EE21 0EE13 0EE4C   0EE04 0EE48 0EE32 0EE40 0EE1B 0EE47 0EE19 0EE1A 0EE27 0EE01 0EE1A 0EE48 0EE07 0EE1A 0EE2D 0EE01 0EE16 0EE36 0EE07 0EE2D 0EE32 0EE23 0EE21 0EE13 0EE4C 0EE1C 0EE48 0EE2D 0EE19 0EE04 0EE25 0EE32 0EE22 0EE41 0EE25 0EE30 0EE41 0EE23 0EE07 0EE08 0EE39 0EE07 0EE43 0EE08 0EE40 0EE0A 0EE34 0EE07 0EE1A 0EE27 0EE01"
+  },
+  {
+    "key": "spindle",
+    "en": "Number of spindles per minute during sleep. Higher values indicate better memory-consolidation efficiency.",
+    "draft": "จำนวน Spindle ต่อนาทีขณะหลัับ ยิ่่งสูงยิ่่งแสดงถึึงประสิทธิภาพการฟื้่นฟูความจำ",
+    "th": "จำนวน Spindle ต่อนาทีขณะหลับ ยิ่งสูงยิ่งแสดงถึงประสิทธิภาพการรวมความจำ",
+    "thCps": "0EE08 0EE33 0EE19 0EE27 0EE19   S p i n d l e   0EE15 0EE48 0EE2D 0EE19 0EE32 0EE17 0EE35 0EE02 0EE13 0EE30 0EE2B 0EE25 0EE31 0EE1A   0EE22 0EE34 0EE48 0EE07 0EE2A 0EE39 0EE07 0EE22 0EE34 0EE48 0EE07 0EE41 0EE2A 0EE14 0EE07 0EE16 0EE36 0EE07 0EE1B 0EE23 0EE30 0EE2A 0EE34 0EE17 0EE18 0EE34 0EE20 0EE32 0EE1E 0EE01 0EE32 0EE23 0EE23 0EE27 0EE21 0EE04 0EE27 0EE32 0EE21 0EE08 0EE33"
+  },
+  {
+    "key": "sws",
+    "en": "Percentage of deep sleep (Deep Sleep) — the period when the body repairs itself and the brain clears toxins.",
+    "draft": "เปอร์เซ็นต์การหลัับสนิท (Deep Sleep) ช่ว่ งเวลาซ่อ่ มแซมร่่างกายและล่้างสารพิษในสมอง",
+    "th": "เปอร์เซ็นต์การหลับสนิท (Deep Sleep) ช่วงเวลาซ่อมแซมร่างกายและล้างสารพิษในสมอง",
+    "thCps": "0EE40 0EE1B 0EE2D 0EE23 0EE4C 0EE40 0EE0B 0EE47 0EE19 0EE15 0EE4C 0EE01 0EE32 0EE23 0EE2B 0EE25 0EE31 0EE1A 0EE2A 0EE19 0EE34 0EE17   ( D e e p   S l e e p )   0EE0A 0EE48 0EE27 0EE07 0EE40 0EE27 0EE25 0EE32 0EE0B 0EE48 0EE2D 0EE21 0EE41 0EE0B 0EE21 0EE23 0EE48 0EE32 0EE07 0EE01 0EE32 0EE22 0EE41 0EE25 0EE30 0EE25 0EE49 0EE32 0EE07 0EE2A 0EE32 0EE23 0EE1E 0EE34 0EE29 0EE43 0EE19 0EE2A 0EE21 0EE2D 0EE07"
+  }
+]

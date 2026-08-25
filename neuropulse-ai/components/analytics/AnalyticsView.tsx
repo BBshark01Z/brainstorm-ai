@@ -9,7 +9,15 @@ import { useLanguage } from "@/hooks/useLanguageContext";
 
 export function AnalyticsView() {
   const { t } = useLanguage();
-  const data = useMemo(() => generateLongitudinalAll(), []);
+  // Sort chronologically (oldest → newest) before rendering so the timeline
+  // flows seamlessly from past to present without out-of-order jumps.
+  const data = useMemo(
+    () =>
+      generateLongitudinalAll().sort(
+        (a, b) => new Date(a.date).valueOf() - new Date(b.date).valueOf()
+      ),
+    []
+  );
   const comparisonRows = useMemo(() => generateBaselineComparison(data), [data]);
 
   return (
@@ -40,6 +48,8 @@ export function AnalyticsView() {
           dataKey="burnoutRisk"
           color="#F59E0B"
           unit="%"
+          domain={[0, 100]}
+          infoKey="an.chart.burnoutInfo"
         />
         <TrendChart
           index={1}
@@ -48,6 +58,8 @@ export function AnalyticsView() {
           data={data}
           dataKey="faaIndex"
           color="#8B5CF6"
+          domain={["auto", "auto"]}
+          infoKey="an.chart.faaInfo"
         />
         <TrendChart
           index={2}
@@ -57,6 +69,8 @@ export function AnalyticsView() {
           dataKey="sleepSpindleDensity"
           color="#22D3EE"
           unit="/min"
+          domain={[0, "auto"]}
+          infoKey="an.chart.spindleInfo"
         />
         <TrendChart
           index={3}
@@ -66,6 +80,8 @@ export function AnalyticsView() {
           dataKey="slowWaveSleepPercent"
           color="#14B8A6"
           unit="%"
+          domain={[0, 100]}
+          infoKey="an.chart.swsInfo"
         />
       </div>
 

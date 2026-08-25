@@ -581,6 +581,125 @@ def list_brainprint_profiles(
 # /api/deepseek-chat  (protected — require JWT)
 # ---------------------------------------------------------------------------
 
+# Local rule-based diagnostic fallback, used when the gateway stream yields no
+# text before [DONE] (empty stream, mid-stream error, etc.). Deterministic and
+# grounded in the eeg_context snapshot the frontend sends — the same
+# "always degrades to something usable" convention as the analytics tip
+# fallback (services/analytics_tip.py). The chat bubble must never be empty.
+_FALLBACK_DIAGNOSTIC_COPY = {
+    "th": {
+        "offline_note": (
+            "การเชื่อมต่อ DeepSeek AI ล้มเหลวหรือไม่ได้ส่งข้อตอบกลับ — นี่เป็นข้อสรุปแบบ rule-based จากข้อมูล EEG ของคุณ:"
+        ),
+        "no_data": (
+            "ยังไม่มีข้อมูล EEG สดให้วิเคราะห์ในช่วงนี้ กรุณาเชื่อมต่อ EEG Stream แบบสดแล้วถามใหม่"
+        ),
+        "focus_high": "คะแนนสมาธิ {value} — สภาวะสมองอยู่ในระดับโฟกัสที่ดี่",
+        "focus_mid": "คะแนนสมาธิ {value} — สภาวะสมาธิอยู่ในระดับกลาง",
+        "focus_low": "คะแนนสมาธิ {value} — สภาวะสมาธิต่ำ ควรให้อีกลางสมองพักร้อน",
+        "stress_high": "ระดับความเครียด {value} — สงู ควรทำกจิกรรมการฟื้่นฟูเช่นการหายใจลึกร่วมกับการพักสายตาสั้นๆ",
+        "stress_mid": "ระดับความเครียด {value} — อยู่ในระดับที่ตองติดตาม",
+        "stress_low": "ระดับความเครียด {value} — อยู่ในระดับปกติ",
+        "fatigue_high": "ความล้าทางจิตใจ {value} — สงู ควรวางแผนพักสั้่นๆ ระหว่างงาน",
+        "fatigue_mid": "ความล้าทางจิตใจ {value} — อยู่ในระดับกลาง",
+        "fatigue_low": "ความล้าทางจิตใจ {value} — อยู่ในระดับปกติ",
+        "bands": "อัตรำส่ว้นตอของแถบคลื่น: delta {delta:.0%} · theta {theta:.0%} · alpha {alpha:.0%} · beta {beta:.0%} · gamma {gamma:.0%}",
+        "tail": (
+            "ข้อมูลน้ีเป็นการคััดกรองเบื้่องต้น ไม่ใช่วินิจฉัยทางคลินิก — เชื่อมตอ DeepSeek AI สำเร็จแล้วถามใหม่เพื่อการวเคราะห์เชิงลึก"
+        ),
+        "joiner": " · ",
+    },
+    "en": {
+        "offline_note": (
+            "The connection to DeepSeek AI failed or returned no reply — here is a rule-based summary from your EEG data:"
+        ),
+        "no_data": (
+            "No live EEG data is available to analyze right now. Please connect a live EEG stream and ask again."
+        ),
+        "focus_high": "Focus score {value} — your brain is in a strong focus state.",
+        "focus_mid": "Focus score {value} — moderate focus state.",
+        "focus_low": "Focus score {value} — low focus; your brain would benefit from a short break.",
+        "stress_high": "Stress level {value} — elevated; consider a recovery activity such as slow deep breathing or a short eye rest.",
+        "stress_mid": "Stress level {value} — within a range worth monitoring.",
+        "stress_low": "Stress level {value} — within a normal range.",
+        "fatigue_high": "Mental fatigue {value} — elevated; plan short breaks between tasks.",
+        "fatigue_mid": "Mental fatigue {value} — moderate.",
+        "fatigue_low": "Mental fatigue {value} — within a normal range.",
+        "bands": "Relative band power: delta {delta:.0%} · theta {theta:.0%} · alpha {alpha:.0%} · beta {beta:.0%} · gamma {gamma:.0%}",
+        "tail": (
+            "This is preliminary screening, not a clinical diagnosis — reconnect to DeepSeek AI and ask again for a deeper analysis."
+        ),
+        "joiner": " · ",
+    },
+}
+
+
+def _pct(value: object, default: float = 0.0) -> float:
+    """Coerce a metric value to a float in [0, 100], clamped."""
+    try:
+        v = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return default
+    return max(0.0, min(100.0, v))
+
+
+def _ratio(value: object, default: float = 0.0) -> float:
+    """Coerce a relative band-power value to a float in [0, 1], clamped.
+
+    The frontend sends relative band power (delta/theta/alpha/beta/gamma)
+    normalized to sum to ~1.0, so it arrives as a 0-1 fraction.
+    """
+    try:
+        v = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return default
+    return max(0.0, min(1.0, v))
+
+
+def build_local_diagnostic_fallback(
+    eeg_context: dict | None, language: str = "en"
+) -> str:
+    """Deterministic rule-based diagnostic reply from the eeg_context snapshot.
+
+    Used by /api/deepseek-chat when the gateway stream yields no text before
+    [DONE], so the assistant bubble is never left empty.
+    """
+    copy = _FALLBACK_DIAGNOSTIC_COPY.get((language or "en").lower(), _FALLBACK_DIAGNOSTIC_COPY["en"])
+    ctx = eeg_context or {}
+
+    parts: list[str] = [copy["offline_note"]]
+
+    focus = _pct(ctx.get("focusScore"))
+    stress = _pct(ctx.get("stressLevel"))
+    fatigue = _pct(ctx.get("mentalFatigue"))
+    has_metrics = any(k in ctx for k in ("focusScore", "stressLevel", "mentalFatigue"))
+    has_bands = any(k in ctx for k in ("delta", "theta", "alpha", "beta", "gamma"))
+
+    if not has_metrics and not has_bands:
+        parts.append(copy["no_data"])
+    else:
+        if "focusScore" in ctx:
+            key = "focus_high" if focus >= 60 else "focus_mid" if focus >= 35 else "focus_low"
+            parts.append(copy[key].format(value=int(round(focus))))
+        if "stressLevel" in ctx:
+            key = "stress_high" if stress >= 60 else "stress_mid" if stress >= 35 else "stress_low"
+            parts.append(copy[key].format(value=int(round(stress))))
+        if "mentalFatigue" in ctx:
+            key = "fatigue_high" if fatigue >= 60 else "fatigue_mid" if fatigue >= 35 else "fatigue_low"
+            parts.append(copy[key].format(value=int(round(fatigue))))
+        if has_bands:
+            parts.append(
+                copy["bands"].format(
+                    delta=_ratio(ctx.get("delta"), 0.0),
+                    theta=_ratio(ctx.get("theta"), 0.0),
+                    alpha=_ratio(ctx.get("alpha"), 0.0),
+                    beta=_ratio(ctx.get("beta"), 0.0),
+                    gamma=_ratio(ctx.get("gamma"), 0.0),
+                )
+            )
+    parts.append(copy["tail"])
+    return copy["joiner"].join(parts)
+
 
 @app.post("/api/deepseek-chat")
 async def deepseek_chat(
@@ -641,7 +760,11 @@ async def deepseek_chat(
     save_chat_message(current_user["id"], "user", payload.user_prompt, eeg_snap)
 
     async def event_stream():
-        """Generator that streams SSE chunks from the DeepSeek gateway to the client."""
+        """Generator that streams SSE chunks from the DeepSeek gateway to the client.
+
+        [DONE] is always the final event — any fallback tokens are emitted
+        before it so the frontend can accumulate them as part of the reply.
+        """
         full_reply = []
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
@@ -671,71 +794,78 @@ async def deepseek_chat(
                         )
                         # Try to parse the error as SSE-style event
                         yield f"data: {{\"error\": {json.dumps(error_body[:2000].decode('utf-8', errors='replace'))}}}\n\n"
-                        yield "data: [DONE]\n\n"
-                        return
-
-                    # Parse SSE chunks from the streaming response
-                    async for line in response.aiter_lines():
-                        line = line.strip()
-                        if not line:
-                            continue
-                        # SSE format: "data: <json>"
-                        if line.startswith("data: "):
-                            payload_text = line[6:]  # strip "data: " prefix
-                            if payload_text == "[DONE]":
+                    else:
+                        # Parse SSE chunks from the streaming response
+                        async for line in response.aiter_lines():
+                            line = line.strip()
+                            if not line:
                                 continue
-                            try:
-                                chunk = json.loads(payload_text)
-                                delta = chunk.get("choices", [{}])[0].get("delta", {})
-                                content = delta.get("content", "")
-                                if content:
-                                    full_reply.append(content)
-                                    # Forward as SSE event to the frontend
-                                    yield f"data: {json.dumps({'token': content})}\n\n"
-                            except json.JSONDecodeError:
-                                # Non-JSON SSE line — forward as-is
-                                yield f"data: {json.dumps({'token': payload_text})}\n\n"
-
-                    # Signal end of stream
-                    yield "data: [DONE]\n\n"
+                            # SSE format: "data: <json>"
+                            if line.startswith("data: "):
+                                payload_text = line[6:]  # strip "data: " prefix
+                                if payload_text == "[DONE]":
+                                    continue
+                                try:
+                                    chunk = json.loads(payload_text)
+                                    delta = chunk.get("choices", [{}])[0].get("delta", {})
+                                    content = delta.get("content", "")
+                                    if content:
+                                        full_reply.append(content)
+                                        # Forward as SSE event to the frontend
+                                        yield f"data: {json.dumps({'token': content})}\n\n"
+                                except json.JSONDecodeError:
+                                    # Non-JSON SSE line — forward as-is
+                                    yield f"data: {json.dumps({'token': payload_text})}\n\n"
 
         except httpx.TimeoutException:
             logger.error("DeepSeek gateway timed out after 60s")
             yield f"data: {json.dumps({'error': 'The AI service took too long to respond. Please try again.'})}\n\n"
-            yield "data: [DONE]\n\n"
         except httpx.HTTPStatusError as exc:
             logger.error(
                 "DeepSeek HTTPStatusError %s: %s",
                 exc.response.status_code, exc.response.text[:2000],
             )
             yield f"data: {json.dumps({'error': f'DeepSeek API error: {exc.response.text[:500]}'})}\n\n"
-            yield "data: [DONE]\n\n"
         except httpx.HTTPError as exc:
             logger.error("DeepSeek streaming error: %s", exc, exc_info=True)
             yield f"data: {json.dumps({'error': f'Streaming error: {str(exc)}'})}\n\n"
-            yield "data: [DONE]\n\n"
         except Exception as exc:
             logger.exception("Unexpected error in deepseek-chat streaming: %s", exc)
             yield f"data: {json.dumps({'error': str(exc)})}\n\n"
-            yield "data: [DONE]\n\n"
+
+        # 3b. Robust fallback: if the stream ended without producing any text
+        # (empty gateway stream, mid-stream error, all chunks dropped), emit the
+        # local rule-based diagnostic as SSE tokens so the chat bubble is never
+        # left empty. The frontend also has its own client-side copy of this
+        # fallback for cases where the stream errors before any data arrives.
+        if not full_reply:
+            fallback_text = build_local_diagnostic_fallback(eeg_snap, payload.language)
+            logger.info("deepseek-chat: empty stream — emitting local rule-based fallback (%d chars)", len(fallback_text))
+            # Chunk the fallback into ~4-char tokens so it still renders
+            # character-by-character in the UI.
+            for i in range(0, len(fallback_text), 4):
+                yield f"data: {json.dumps({'token': fallback_text[i:i + 4]})}\n\n"
+
+        # Signal end of stream — always the final event
+        yield "data: [DONE]\n\n"
 
         # 4. Save the full assembled reply to chat_messages after streaming completes
         reply_text = "".join(full_reply)
-        if reply_text:
-            latency_ms = (time.perf_counter() - start) * 1000
-            logger.info("deepseek-chat: saved %d chars reply in %.0fms", len(reply_text), latency_ms)
-            save_chat_message(current_user["id"], "assistant", reply_text, eeg_snap)
-        else:
-            # Streaming failed — save the error message
-            latency_ms = (time.perf_counter() - start) * 1000
-            logger.warning("deepseek-chat: no reply content saved (latency %.0fms)", latency_ms)
+        if not reply_text:
+            # The local fallback was emitted — persist it so history matches what
+            # the user actually saw in the bubble.
+            reply_text = build_local_diagnostic_fallback(eeg_snap, payload.language)
+        latency_ms = (time.perf_counter() - start) * 1000
+        logger.info("deepseek-chat: saved %d chars reply in %.0fms", len(reply_text), latency_ms)
+        save_chat_message(current_user["id"], "assistant", reply_text, eeg_snap)
 
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
         headers={
-            "Cache-Control": "no-cache",
+            "Cache-Control": "no-cache, no-transform",
             "Connection": "keep-alive",
+            "Content-Encoding": "identity",  # Never let a proxy gzip/encode the stream
             "X-Accel-Buffering": "no",  # Disable nginx buffering if behind proxy
         },
     )
