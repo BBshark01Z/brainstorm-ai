@@ -117,7 +117,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   return (
     <AppStatusContext.Provider value={{ brainprintStatus, setBrainprintStatus }}>
       <div className="relative flex min-h-screen bg-[#060810]">
-        <Sidebar onOpenCredits={() => setCreditsOpen(true)} />
+        <Sidebar />
         <div className="flex min-h-screen flex-1 flex-col">
           <Header
             connection={connection}
