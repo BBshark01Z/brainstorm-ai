@@ -1,11 +1,42 @@
 "use client";
 
+import { useMemo } from "react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { LongitudinalDataPoint } from "@/lib/types";
 import { GlowPanel } from "@/components/ui/primitives";
 import { useLanguage } from "@/hooks/useLanguageContext";
 
-type YDomain = [number | "auto", number | "auto"];
+/** Format an ISO date (YYYY-MM-DD) as DD/MM for axis ticks. */
+const formatTickDate = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}/${mm}`;
+};
+
+/** Pick a tick interval that yields ~4-8 labels for any dataset size. */
+const tickIntervalFor = (count: number) =>
+  Math.max(0, Math.ceil(count / 7) - 1);
+
+/**
+ * Per-metric Y-axis configuration: fixed or dynamic domain plus the tick
+ * formatting that matches each metric's scale (percent, signed decimal
+ * index, count/min). A null domain means "auto-scale to the data" (the
+ * 10%-padded domain computed in the component below).
+ */
+const Y_AXIS_CONFIG: Record<
+  string,
+  {
+    domain: [number | "auto", number | "auto"] | null;
+    format: (v: number) => string;
+  }
+> = {
+  burnoutRisk: { domain: [0, 100], format: (v) => String(Math.round(v)) },
+  faaIndex: { domain: ["auto", "auto"], format: (v) => v.toFixed(2) },
+  sleepSpindleDensity: { domain: null, format: (v) => v.toFixed(1) },
+  slowWaveSleepPercent: { domain: [0, "auto"], format: (v) => `${Math.round(v)}%` },
+};
 
 export function TrendChart({
   title,
@@ -15,7 +46,6 @@ export function TrendChart({
   color,
   unit,
   index = 0,
-  domain,
   infoKey,
 }: {
   title: string;
@@ -25,19 +55,51 @@ export function TrendChart({
   color: string;
   unit?: string;
   index?: number;
-  /** Y-axis domain, set per metric (e.g. [0,100] for %, ['auto','auto'] for signed FAA). */
-  domain?: YDomain;
   /** i18n key for the info-tooltip copy shown beside the title. */
   infoKey?: string;
 }) {
   const { t } = useLanguage();
   const gradientId = `gradient-${dataKey}`;
-  const latest = data[data.length - 1];
+
+  // Strictly sort incoming points oldest → newest by timestamp so the
+  // timeline never jumps, regardless of the order the data arrives in.
+  const sortedData = useMemo(
+    () =>
+      [...data].sort(
+        (a, b) => new Date(a.date).valueOf() - new Date(b.date).valueOf()
+      ),
+    [data]
+  );
+
+  const yConfig = Y_AXIS_CONFIG[dataKey] ?? {
+    domain: null,
+    format: (v: number) => v.toLocaleString(),
+  };
+
+  // Y domain: fixed bounds where the metric's scale is known (percent
+  // metrics), otherwise auto-scale to the data with 10% headroom so each
+  // metric (decimal index, count/min) renders on its own scale.
+  const yDomain = useMemo<[number | "auto", number | "auto"]>(() => {
+    if (yConfig.domain) return yConfig.domain;
+    const values = sortedData
+      .map((p) => p[dataKey])
+      .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+    if (values.length === 0) return ["auto", "auto"];
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    if (min === max) {
+      const pad = Math.abs(min) * 0.1 || 1;
+      return [min - pad, max + pad];
+    }
+    const pad = (max - min) * 0.1;
+    return [min - pad, max + pad];
+  }, [sortedData, dataKey, yConfig]);
+
+  const latest = sortedData[sortedData.length - 1];
   const latestValue = latest ? (latest[dataKey] as number) : undefined;
-  // Signed metrics (FAA) read better with one decimal; whole-number metrics
-  // (percent, spindles/min) stay as-is.
-  const isDecimal = dataKey === "faaIndex";
-  const fmt = (v: number) => (isDecimal ? v.toFixed(1) : v.toLocaleString());
+  // Same per-metric formatting as the Y-axis ticks, so the header readout
+  // and tooltip always match the axis scale.
+  const fmt = yConfig.format;
 
   return (
     <div className="rise-in" style={{ animationDelay: `${index * 70}ms` }}>
@@ -88,7 +150,7 @@ export function TrendChart({
         </div>
         <div className="h-48 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+            <AreaChart data={sortedData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={color} stopOpacity={0.35} />
@@ -99,15 +161,15 @@ export function TrendChart({
               <XAxis
                 dataKey="date"
                 tick={{ fontSize: 10, fill: "#5B6478" }}
-                tickFormatter={(d: string) => d.slice(5)}
-                minTickGap={24}
+                tickFormatter={formatTickDate}
+                interval={tickIntervalFor(sortedData.length)}
                 axisLine={{ stroke: "var(--hairline-default)" }}
                 tickLine={false}
               />
               <YAxis
-                domain={domain ?? ["auto", "auto"]}
-                tick={{ fontSize: 10, fill: "#5B6478" }}
-                width={32}
+                domain={yDomain}
+                tick={{ fill: "#9CA3AF", fontSize: 12, fontWeight: 500 }}
+                width={45}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v: number) => fmt(v)}

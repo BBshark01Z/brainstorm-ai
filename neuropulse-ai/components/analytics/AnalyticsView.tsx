@@ -48,7 +48,6 @@ export function AnalyticsView() {
           dataKey="burnoutRisk"
           color="#F59E0B"
           unit="%"
-          domain={[0, 100]}
           infoKey="an.chart.burnoutInfo"
         />
         <TrendChart
@@ -58,7 +57,6 @@ export function AnalyticsView() {
           data={data}
           dataKey="faaIndex"
           color="#8B5CF6"
-          domain={["auto", "auto"]}
           infoKey="an.chart.faaInfo"
         />
         <TrendChart
@@ -69,7 +67,6 @@ export function AnalyticsView() {
           dataKey="sleepSpindleDensity"
           color="#22D3EE"
           unit="/min"
-          domain={[0, "auto"]}
           infoKey="an.chart.spindleInfo"
         />
         <TrendChart
@@ -80,7 +77,6 @@ export function AnalyticsView() {
           dataKey="slowWaveSleepPercent"
           color="#14B8A6"
           unit="%"
-          domain={[0, 100]}
           infoKey="an.chart.swsInfo"
         />
       </div>

@@ -164,7 +164,10 @@ export function generateLongitudinalAll(): LongitudinalDataPoint[] {
   const cutoff = recent[recent.length - 1].date; // oldest recent date (29 days ago)
   const history = weekly.filter((point) => point.date < cutoff); // keep weekly older than recent
 
-  return [...history, ...recent]; // ascending by date
+  // The weekly series can interleave out of order with the daily series
+  // (e.g. a weekly point 28 days ago vs. a daily point 29 days ago), so sort
+  // the merged result strictly ascending by ISO date before returning.
+  return [...history, ...recent].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 /** Builds "current vs. past 30-day average" comparison rows for the analytics page. */
