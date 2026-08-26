@@ -174,6 +174,8 @@ export async function sendToDeepSeekAIStream(
           // Non-JSON SSE line — skip
           continue;
         }
+        // JSON.parse of "null" yields null — nothing to do with it.
+        if (!parsed) continue;
 
         if (parsed.error) {
           // Backend signalled a stream error — surface it so the caller can
